@@ -28,6 +28,10 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 TEST_DIR="$PROJECT_DIR/test/system"
 RECORDS_DIR="$PROJECT_DIR/tmp/capybara-records"
 
+# Test runner command — override for non-Rails projects
+# Examples: "pytest", "npm test --", "go test ./..."
+TEST_CMD="${TEST_CMD:-bin/rails test}"
+
 HEADLESS_FLAG=false
 DEMO_TS="$(date +%Y%m%d_%H%M)"
 TMPFILES=()
@@ -254,11 +258,11 @@ run_with_record() {
     echo "0" > "$DEMO_COUNTER_FILE"
     export DEMO_TEST_COUNT="$test_count"
     [ -n "$prefix" ] && export DEMO_SCENARIO_PREFIX="$prefix"
-    bin/rails test "$test_file" || true
+    $TEST_CMD "$test_file" || true
     unset DEMO_COUNTER_FILE DEMO_SCENARIO_PREFIX DEMO_TEST_COUNT 2>/dev/null || true
     finalize_scenario "$RECORDS_DIR" "$scenario" "$prefix"
   else
-    bin/rails test "$test_file"
+    $TEST_CMD "$test_file"
   fi
 }
 
@@ -349,5 +353,5 @@ else
   for t in "${SCENARIOS[@]}"; do
     files+=("$(target_file "$t")")
   done
-  bin/rails test "${files[@]}"
+  $TEST_CMD "${files[@]}"
 fi

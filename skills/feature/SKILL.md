@@ -48,10 +48,7 @@ Présenter le scope à l'utilisateur via `AskUserQuestion` :
    - Respecter les patterns existants dans le codebase
    - Suivre les conventions décrites dans le CLAUDE.md du projet
 
-3. Après chaque bloc logique de changements, lancer les tests pertinents :
-   ```bash
-   bin/rails test test/path/to_relevant_tests.rb
-   ```
+3. Après chaque bloc logique de changements, lancer les tests pertinents
 
 4. Corriger les échecs avant de continuer.
 
@@ -60,21 +57,15 @@ Présenter le scope à l'utilisateur via `AskUserQuestion` :
 ## Phase 3 : Tests
 
 1. Écrire les tests pour la nouvelle fonctionnalité :
-   - Test système (Capybara) si c'est un changement UI
+   - Test e2e/système si c'est un changement UI
    - Test unitaire/intégration pour la logique métier
    - Couvrir le happy path + un edge case
 
-2. Lancer les nouveaux tests :
-   ```bash
-   bin/rails test test/path/to_new_tests.rb
-   ```
+2. Lancer les nouveaux tests
 
 3. Si échec, corriger et relancer (max 5 itérations).
 
-4. Lancer la suite complète pour détecter les régressions :
-   ```bash
-   bin/rails test
-   ```
+4. Lancer la suite complète pour détecter les régressions
 
 5. **Si blocage persistant** (tests qui ne passent pas après 5 tentatives) :
    - Ne PAS s'arrêter — continuer le pipeline en mode dégradé

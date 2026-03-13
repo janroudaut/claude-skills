@@ -7,7 +7,7 @@ Rules and conventions for Claude Code on this repository. For acquired knowledge
 
 <!-- Décrire le projet : stack technique, domaine métier, frameworks utilisés -->
 <!-- Exemple :
-Rails 8.1+ / Ruby 3.4.x application. Handles [domaine métier].
+[Framework] application. Handles [domaine métier].
 
 **Stack:** [frameworks, libraries, outils]
 -->
@@ -15,20 +15,20 @@ Rails 8.1+ / Ruby 3.4.x application. Handles [domaine métier].
 <!-- PROJECT-SPECIFIC: Adapter les commandes à votre projet -->
 ## Commands
 
+<!-- Lister les commandes de développement, test, lint, etc.
 ```bash
 # Development
-bin/rails server                  # Start dev server (localhost:3000)
-bin/rails db:setup                # Create, migrate, and seed DB
+<commande serveur>               # Start dev server
+<commande setup>                 # Setup DB / dependencies
 
 # Testing
-bin/rails test                    # Run unit/integration tests
-bin/rails test test/path/file.rb  # Run a single test file
-bin/rails test:system             # Run system/browser tests
+<commande tests>                 # Run all tests
+<commande test fichier>          # Run a single test file
 
 # Linting & Security
-bin/rubocop -a                    # Lint with auto-correct
-bin/brakeman --no-pager           # Security scanning
+<commande lint>                  # Lint with auto-correct
 ```
+-->
 
 ---
 
@@ -112,14 +112,15 @@ Don't enter extended exploration/planning phases without producing code. If the 
 - Règles de responsive/mobile
 -->
 
-<!-- PROJECT-SPECIFIC: Ajouter les conventions Rails spécifiques à votre projet -->
-### 6. Rails Conventions
+<!-- PROJECT-SPECIFIC: Ajouter les conventions de framework spécifiques à votre projet -->
+### 6. Framework Conventions
 
-- Ensure Turbo Stream response format matches between controller `respond_to` blocks and template file extensions.
-- Always use ERB tags (`<%= %>`) for Ruby expressions in `.erb` templates — never raw string interpolation.
-- Use flexible version ranges (`Rails 8.1+`, `Ruby 3.4.x`) rather than pinning exact minor/patch versions.
-
-<!-- Ajouter ici les conventions spécifiques : asset pipeline, jobs, i18n, etc. -->
+<!-- Exemples :
+- Conventions de templates (ERB, Jinja, JSX, etc.)
+- Asset pipeline / bundler
+- Background jobs
+- i18n
+-->
 
 ### 7. Git
 

@@ -50,7 +50,7 @@ Lire le fichier Markdown en entier.
 ### 2B. Identifier le code lié
 
 Inférer les fichiers source documentés en cherchant :
-- Les chemins de fichiers mentionnés dans la doc (`app/models/`, `config/routes.rb`, etc.)
+- Les chemins de fichiers mentionnés dans la doc
 - Les classes, méthodes, commandes référencées
 - Les noms de fichiers/dossiers cités
 

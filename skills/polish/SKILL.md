@@ -112,10 +112,7 @@ For each selected issue, in order:
 2. Make the minimal fix (surgical, no adjacent changes)
 3. If tests are affected, update them too
 
-After all fixes:
-```bash
-bin/rails test <list of modified test files>
-```
+After all fixes, run the modified test files.
 
 If tests fail:
 - Analyze the failure

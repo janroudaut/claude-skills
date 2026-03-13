@@ -31,10 +31,8 @@ Lancer 2 agents Task en parallèle :
 ### Agent B — Test de reproduction
 1. Identifier le bon fichier de test (system test si UI, unit/integration sinon)
 2. Écrire un test minimal qui **reproduit exactement le symptôme**
-3. Lancer le test pour confirmer qu'il échoue :
-   ```bash
-   bin/rails test test/path/to_test.rb -n test_name
-   ```
+3. Lancer le test pour confirmer qu'il échoue (utiliser la commande de test du projet)
+
 4. Vérifier que le test échoue **pour la bonne raison** (pas une erreur de setup)
 5. Retourner : le test et sa sortie d'erreur
 
@@ -52,10 +50,7 @@ Si l'agent B n'arrive pas à reproduire le bug :
 **Ne PAS demander à l'utilisateur — itérer jusqu'au vert.**
 
 1. Implémenter la correction **minimale** — ne toucher que le code nécessaire
-2. Relancer le test de reproduction :
-   ```bash
-   bin/rails test test/path/to_test.rb -n test_name
-   ```
+2. Relancer le test de reproduction
 
 ### Si le test échoue encore :
 
@@ -79,10 +74,7 @@ S'arrêter et présenter à l'utilisateur :
 
 ## Phase 3 : Vérification complète
 
-1. Lancer la suite de tests complète pour détecter les régressions :
-   ```bash
-   bin/rails test
-   ```
+1. Lancer la suite de tests complète pour détecter les régressions
 2. Si des tests existants cassent :
    - Analyser si c'est une régression réelle ou un test fragile
    - Corriger les régressions réelles

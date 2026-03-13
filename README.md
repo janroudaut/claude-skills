@@ -1,6 +1,6 @@
 # Claude Skills — Skills Réutilisables pour Claude Code
 
-Collection de skills Claude Code génériques, extraites de projets Rails en production et prêtes à l'emploi sur n'importe quel projet.
+Collection de skills Claude Code génériques, extraites de projets en production et prêtes à l'emploi sur n'importe quel projet.
 
 ## Philosophie
 
@@ -98,7 +98,7 @@ Les skills de ce repository sont génériques. Pour des besoins spécifiques à 
 ## Pré-requis
 
 - **Claude Code** : les skills sont conçues pour Claude Code (cli)
-- **Rails** : les commandes de test utilisent `bin/rails test` par défaut
+- **Test runner** : les skills et templates utilisent `bin/rails test` par défaut (configurable via `TEST_CMD`)
 - **jq** : requis par `bin/test-hook` pour parser le JSON d'entrée
 - **gh** (optionnel) : requis par `/feature` et `/polish` pour créer des PRs
 - **ffmpeg + ffprobe** (optionnel) : requis par `bin/demo --record` pour l'enregistrement vidéo

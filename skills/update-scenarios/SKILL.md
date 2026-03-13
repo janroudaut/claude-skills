@@ -24,7 +24,7 @@ Chaque scénario correspond à un **domaine** ou **focus** du workflow de l'appl
 
 ### 1A. Analyser la fonctionnalité
 
-1. Identifier les fichiers de la feature : routes, contrôleurs, vues, JS/Stimulus
+1. Identifier les fichiers de la feature : routes, contrôleurs/handlers, vues/templates, JS
 2. Tracer le parcours utilisateur : à quel moment du workflow cette feature intervient-elle ?
 3. Identifier les interactions : formulaires, modals, sélections, clics, feedback visuel
 
@@ -32,7 +32,7 @@ Chaque scénario correspond à un **domaine** ou **focus** du workflow de l'appl
 
 1. Lire les scénarios de démo actuels :
    ```bash
-   find test/system -name "demo_*_test.rb" -o -name "*_workflow_test.rb" -o -name "*_scenario_test.rb" -o -name "*_e2e_*_test.rb"
+   find test/ tests/ spec/ -name "demo_*" -o -name "*_workflow_*" -o -name "*_scenario_*" -o -name "*_e2e_*" 2>/dev/null
    ```
 2. Lire `bin/demo` (si existant) pour comprendre les domaines couverts :
    - Quels targets existent ? (ex. `e2e`, `reception`, `delivery`)
@@ -130,7 +130,7 @@ end
 
 Si la feature ouvre un nouveau domaine de l'application :
 
-1. Créer `test/system/demo_<domaine>_test.rb`
+1. Créer le fichier de test e2e pour le domaine
 2. Concevoir le parcours complet du domaine (pas juste la feature)
 3. Ajouter dans `bin/demo` : `target_file`, `target_title`, `expand_targets`
 
@@ -183,10 +183,7 @@ Proposer d'installer le template depuis claude-skills.
 
 ## Phase 5 : Vérification
 
-1. Lancer le scénario modifié :
-   ```bash
-   bin/rails test test/system/demo_<domaine>_test.rb
-   ```
+1. Lancer le scénario modifié (commande de test du projet)
 
 2. Vérifier visuellement si possible :
    ```bash
