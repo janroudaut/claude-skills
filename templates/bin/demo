@@ -1,0 +1,353 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ──────────────────────────────────────────────
+# Demo mode: run system tests in a visible browser with optional recording.
+#
+# Usage:
+#   bin/demo                               # Run the default scenario
+#   bin/demo -t 2 e2e                      # 2s pause between major actions
+#   bin/demo -t 0.3,2 e2e                  # 0.3s between clicks, 2s between major actions
+#   bin/demo --record e2e                  # Record → tmp/capybara-records/YYYYMMDD_HHMM_e2e.mkv
+#   bin/demo --headless --record e2e       # Record without visible browser (CI-friendly)
+#   bin/demo --record scenario1 scenario2  # Record multiple → combined .mkv with title cards
+#   bin/demo --record all                  # Record all → combined .mkv with title cards + chapters
+#   bin/demo --list                        # List available targets
+#
+# Features:
+#   - Bottom bar with human-readable test label + n/N counter
+#   - Title cards between scenarios (when recording multiple)
+#   - MKV chapters for navigation (one per test)
+#   - Configurable tempo via -t (or DEMO_TEMPO_MAJOR / DEMO_TEMPO_MINOR env vars)
+#
+# Required: ffmpeg + ffprobe (for --record)
+# ──────────────────────────────────────────────
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+TEST_DIR="$PROJECT_DIR/test/system"
+RECORDS_DIR="$PROJECT_DIR/tmp/capybara-records"
+
+HEADLESS_FLAG=false
+DEMO_TS="$(date +%Y%m%d_%H%M)"
+TMPFILES=()
+cleanup() {
+  local rc=$?
+  if [ $rc -eq 0 ] || [ $rc -eq 130 ]; then
+    for f in "${TMPFILES[@]}"; do rm -f "$f"; done
+  fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+
+# ══════════════════════════════════════════════
+# PROJECT-SPECIFIC: Define your scenarios below
+# ══════════════════════════════════════════════
+
+# Map target name → test file
+target_file() {
+  case "$1" in
+    # e2e)       echo "$TEST_DIR/e2e_full_scenario_test.rb" ;;
+    # reception) echo "$TEST_DIR/reception_workflow_test.rb" ;;
+    *) echo "Unknown target: $1" >&2; exit 1 ;;
+  esac
+}
+
+# Map target name → human-readable title (used in title cards + MKV metadata)
+target_title() {
+  case "$1" in
+    # e2e)       echo "E2E — Parcours complet" ;;
+    # reception) echo "Workflow Réception" ;;
+    *) echo "$1" ;;
+  esac
+}
+
+# Expand composite targets into individual ones
+expand_targets() {
+  local -a expanded=()
+  for t in "$@"; do
+    case "$t" in
+      # all)  expanded+=(e2e reception delivery) ;;
+      *)    expanded+=("$t") ;;
+    esac
+  done
+  echo "${expanded[@]}"
+}
+
+# ══════════════════════════════════════════════
+# Recording infrastructure (generic — no changes needed)
+# ══════════════════════════════════════════════
+
+count_tests() {
+  local total=0
+  for file in "$@"; do
+    local n
+    n="$(grep -cE '^\s+(def test_|test ["'"'"'])' "$file" || true)"
+    total=$((total + n))
+  done
+  echo "$total"
+}
+
+# Generate a title card (dark panel with centered text) between scenarios
+generate_title_card() {
+  local text="$1" output="$2" width="$3" height="$4"
+  ffmpeg -f lavfi -i "color=c=0x0d1b2a:s=${width}x${height}:d=2:r=10" \
+    -vf "drawtext=text='${text}':fontcolor=white:fontsize=56:x=(w-text_w)/2:y=(h-text_h)/2" \
+    -c:v libx264 -pix_fmt yuv420p -preset fast -y "$output" \
+    > /dev/null 2>&1
+}
+
+# Concatenate per-test .mp4 files into a chaptered .mkv
+finalize_scenario() {
+  local dir="$1" scenario="$2" prefix="${3:-}"
+
+  local -a videos=()
+  if [ -n "$prefix" ]; then
+    while IFS= read -r f; do videos+=("$f"); done < <(ls "$dir"/${DEMO_TS}_*_${prefix}_*.mp4 2>/dev/null | sort)
+  else
+    while IFS= read -r f; do videos+=("$f"); done < <(ls "$dir"/${DEMO_TS}_*.mp4 2>/dev/null | sort)
+  fi
+  [ ${#videos[@]} -eq 0 ] && return
+
+  local concat_list="$dir/_concat.txt"
+  local metadata="$dir/_meta.txt"
+  > "$concat_list"
+  echo ";FFMETADATA1" > "$metadata"
+
+  local cumulative_ms=0
+  for video in "${videos[@]}"; do
+    echo "file '$video'" >> "$concat_list"
+
+    local dur_s dur_ms
+    dur_s="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$video")"
+    dur_ms="$(awk "BEGIN {printf \"%.0f\", $dur_s * 1000}")"
+
+    # Chapter title from filename: strip timestamp, prefix, sequence number → human-readable
+    local base title
+    base="$(basename "$video" .mp4)"
+    title="$(echo "$base" | sed -E 's/^[0-9]{8}_[0-9]{4}_//')"
+    [ -n "$prefix" ] && title="$(echo "$title" | sed -E "s/^${prefix}_//")"
+    title="$(echo "$title" | sed -E 's/^[0-9]{2}_//' | tr '_' ' ')"
+
+    echo "[CHAPTER]" >> "$metadata"
+    echo "TIMEBASE=1/1000" >> "$metadata"
+    echo "START=$cumulative_ms" >> "$metadata"
+    cumulative_ms=$((cumulative_ms + dur_ms))
+    echo "END=$cumulative_ms" >> "$metadata"
+    echo "title=$title" >> "$metadata"
+  done
+
+  local output="$dir/${DEMO_TS}_${scenario}.mkv"
+  ffmpeg -f concat -safe 0 -i "$concat_list" -i "$metadata" -map_metadata 1 \
+    -c copy -y "$output" > /dev/null 2>&1
+
+  for video in "${videos[@]}"; do rm -f "$video"; done
+  rm -f "$concat_list" "$metadata"
+  echo "  ✔ $output"
+}
+
+# Concatenate per-scenario .mkv files with title cards between them
+concat_all() {
+  local dir="$1" output_name="${2:-all}"
+
+  local -a scenario_names=("${CONCAT_SCENARIO_NAMES[@]}")
+  local -a scenario_titles=("${CONCAT_SCENARIO_TITLES[@]}")
+
+  local -a scenario_files=()
+  for sname in "${scenario_names[@]}"; do
+    local f="$dir/${DEMO_TS}_${sname}.mkv"
+    [ -f "$f" ] || f=""
+    scenario_files+=("$f")
+  done
+
+  # Detect resolution from first existing file
+  local first_file=""
+  for f in "${scenario_files[@]}"; do
+    [ -n "$f" ] && { first_file="$f"; break; }
+  done
+  [ -z "$first_file" ] && { echo "  No scenario recordings to concatenate."; return; }
+
+  local resolution width height
+  resolution="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "$first_file")"
+  width="${resolution%,*}"
+  height="${resolution#*,}"
+
+  local concat_list="$dir/_concat_all.txt"
+  local metadata="$dir/_meta_all.txt"
+  > "$concat_list"
+  echo ";FFMETADATA1" > "$metadata"
+
+  local cumulative_ms=0
+  for i in $(seq 0 $((${#scenario_names[@]} - 1))); do
+    [ -z "${scenario_files[$i]}" ] && continue
+
+    # Title card
+    local title_file="$dir/_title_${scenario_names[$i]}.mkv"
+    echo "  Generating title card: ${scenario_titles[$i]}"
+    generate_title_card "${scenario_titles[$i]}" "$title_file" "$width" "$height"
+    echo "file '$title_file'" >> "$concat_list"
+
+    local tc_dur_s tc_dur_ms
+    tc_dur_s="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$title_file")"
+    tc_dur_ms="$(awk "BEGIN {printf \"%.0f\", $tc_dur_s * 1000}")"
+
+    echo "[CHAPTER]" >> "$metadata"
+    echo "TIMEBASE=1/1000" >> "$metadata"
+    echo "START=$cumulative_ms" >> "$metadata"
+    cumulative_ms=$((cumulative_ms + tc_dur_ms))
+    echo "END=$cumulative_ms" >> "$metadata"
+    echo "title=${scenario_titles[$i]}" >> "$metadata"
+
+    # Scenario file + its internal chapters (shifted by current offset)
+    echo "file '${scenario_files[$i]}'" >> "$concat_list"
+
+    local scenario_offset=$cumulative_ms
+    local sc_dur_s sc_dur_ms
+    sc_dur_s="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "${scenario_files[$i]}")"
+    sc_dur_ms="$(awk "BEGIN {printf \"%.0f\", $sc_dur_s * 1000}")"
+
+    # Extract per-test chapters from intermediate MKV and shift them
+    local chapters_output
+    chapters_output="$(ffprobe -v error -show_chapters -print_format json "${scenario_files[$i]}" 2>/dev/null | \
+      python3 -c "
+import sys, json
+title, offset = sys.argv[1], int(sys.argv[2])
+for ch in json.load(sys.stdin).get('chapters', []):
+    s = int(float(ch['start_time']) * 1000) + offset
+    e = int(float(ch['end_time']) * 1000) + offset
+    t = ch.get('tags', {}).get('title', 'unknown')
+    print(f'[CHAPTER]\nTIMEBASE=1/1000\nSTART={s}\nEND={e}\ntitle={title} — {t}')
+" "${scenario_titles[$i]}" "$scenario_offset" 2>/dev/null)" || chapters_output=""
+
+    if [ -n "$chapters_output" ]; then
+      echo "$chapters_output" >> "$metadata"
+    else
+      echo "[CHAPTER]" >> "$metadata"
+      echo "TIMEBASE=1/1000" >> "$metadata"
+      echo "START=$scenario_offset" >> "$metadata"
+      echo "END=$((scenario_offset + sc_dur_ms))" >> "$metadata"
+      echo "title=${scenario_titles[$i]}" >> "$metadata"
+    fi
+
+    cumulative_ms=$((cumulative_ms + sc_dur_ms))
+  done
+
+  local output="$dir/${DEMO_TS}_${output_name}.mkv"
+  echo "  Concatenating all scenarios..."
+  ffmpeg -f concat -safe 0 -i "$concat_list" -i "$metadata" -map_metadata 1 \
+    -c copy -y "$output" > /dev/null 2>&1
+
+  rm -f "$concat_list" "$metadata" "$dir"/_title_*.mkv
+  echo "  ✔ Combined recording: $output"
+}
+
+# Run a scenario with optional recording + finalization
+run_with_record() {
+  local test_file="$1" scenario="$2" prefix="${3:-}"
+
+  if [ "${DEMO_RECORD:-}" = "true" ]; then
+    local test_count
+    test_count="$(count_tests "$test_file")"
+    export DEMO_TS="$DEMO_TS"
+    export DEMO_COUNTER_FILE="$(mktemp)"
+    TMPFILES+=("$DEMO_COUNTER_FILE")
+    echo "0" > "$DEMO_COUNTER_FILE"
+    export DEMO_TEST_COUNT="$test_count"
+    [ -n "$prefix" ] && export DEMO_SCENARIO_PREFIX="$prefix"
+    bin/rails test "$test_file" || true
+    unset DEMO_COUNTER_FILE DEMO_SCENARIO_PREFIX DEMO_TEST_COUNT 2>/dev/null || true
+    finalize_scenario "$RECORDS_DIR" "$scenario" "$prefix"
+  else
+    bin/rails test "$test_file"
+  fi
+}
+
+# ── Parse options ──
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -t|--tempo)
+      if [[ "$2" == *,* ]]; then
+        _minor="${2%%,*}" _major="${2#*,}"
+        [ -n "$_minor" ] && export DEMO_TEMPO_MINOR="$_minor"
+        [ -n "$_major" ] && export DEMO_TEMPO_MAJOR="$_major"
+      else
+        export DEMO_TEMPO_MAJOR="$2"
+      fi
+      shift 2
+      ;;
+    --record)
+      export DEMO_RECORD=true
+      shift
+      ;;
+    --headless)
+      HEADLESS_FLAG=true
+      shift
+      ;;
+    --list)
+      echo "Available targets:"
+      echo "  (configure target_file / target_title / expand_targets in this script)"
+      exit 0
+      ;;
+    -*)
+      echo "Unknown option: $1"
+      echo "Usage: bin/demo [-t [minor,]major] [--record] [--headless] [--list] [TARGET ...]"
+      exit 1
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [ "$HEADLESS_FLAG" = "true" ]; then
+  export HEADLESS=true
+else
+  export HEADLESS=false
+fi
+
+mkdir -p "$RECORDS_DIR/tmp"
+
+# ── Resolve targets ──
+
+TARGETS=("$@")
+[ ${#TARGETS[@]} -eq 0 ] && TARGETS=("e2e")
+
+read -ra SCENARIOS <<< "$(expand_targets "${TARGETS[@]}")"
+
+# Validate all targets before running anything
+for t in "${SCENARIOS[@]}"; do
+  target_file "$t" > /dev/null
+done
+
+# ── Run scenarios ──
+
+if [ ${#SCENARIOS[@]} -eq 1 ]; then
+  echo "▶ Running ${SCENARIOS[0]}..."
+  run_with_record "$(target_file "${SCENARIOS[0]}")" "${SCENARIOS[0]}"
+elif [ "${DEMO_RECORD:-}" = "true" ]; then
+  echo "▶ Recording ${#SCENARIOS[@]} scenarios: ${SCENARIOS[*]}..."
+  CONCAT_SCENARIO_NAMES=()
+  CONCAT_SCENARIO_TITLES=()
+  for i in $(seq 0 $((${#SCENARIOS[@]} - 1))); do
+    t="${SCENARIOS[$i]}"
+    prefix="$((i + 1))_${t}"
+    echo "  ▷ ${t}..."
+    run_with_record "$(target_file "$t")" "$t" "$prefix"
+    CONCAT_SCENARIO_NAMES+=("$t")
+    CONCAT_SCENARIO_TITLES+=("$(target_title "$t")")
+  done
+  if [ ${#TARGETS[@]} -eq 1 ]; then
+    combined="${TARGETS[0]}"
+  else
+    combined="$(IFS=+; echo "${SCENARIOS[*]}")"
+  fi
+  concat_all "$RECORDS_DIR" "$combined"
+else
+  echo "▶ Running ${#SCENARIOS[@]} scenarios: ${SCENARIOS[*]}..."
+  files=()
+  for t in "${SCENARIOS[@]}"; do
+    files+=("$(target_file "$t")")
+  done
+  bin/rails test "${files[@]}"
+fi

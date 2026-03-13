@@ -18,6 +18,7 @@ Le repository inclut aussi un **template CLAUDE.md** avec des guidelines comport
 | `/polish` | Revue de code : bugs, conformité, couverture tests + corrections QCM | numéro de PR ou branche (optionnel) |
 | `/changelog` | Génère le changelog métier à partir des commits | `full` pour tout régénérer (optionnel) |
 | `/update-doc` | Détecte le drift code↔doc et propose les mises à jour | chemin ou nom du fichier doc (optionnel) |
+| `/update-scenarios` | Intègre les nouvelles features dans les scénarios e2e par domaine | fonctionnalité ajoutée/modifiée |
 
 Voir [SKILLS.md](SKILLS.md) pour la documentation complète avec exemples.
 
@@ -67,8 +68,10 @@ claude-skills/
 │   ├── explore-approaches/SKILL.md
 │   ├── feature/SKILL.md
 │   ├── polish/SKILL.md
-│   └── update-doc/SKILL.md
+│   ├── update-doc/SKILL.md
+│   └── update-scenarios/SKILL.md
 ├── templates/                 # Templates de configuration
+│   ├── bin/demo               # Script démo enregistrable (ffmpeg, title cards, chapitres MKV)
 │   ├── CLAUDE.md              # Guidelines comportementales
 │   └── settings.json          # Hook PostToolUse
 ├── bin/                       # Scripts utilitaires
@@ -98,3 +101,4 @@ Les skills de ce repository sont génériques. Pour des besoins spécifiques à 
 - **Rails** : les commandes de test utilisent `bin/rails test` par défaut
 - **jq** : requis par `bin/test-hook` pour parser le JSON d'entrée
 - **gh** (optionnel) : requis par `/feature` et `/polish` pour créer des PRs
+- **ffmpeg + ffprobe** (optionnel) : requis par `bin/demo --record` pour l'enregistrement vidéo

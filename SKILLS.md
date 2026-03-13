@@ -54,6 +54,16 @@ Détecte les écarts entre le code et la documentation, propose et applique les 
 
 Exemple : `/update-doc README.md` ou `/update-doc docs/api.md` ou `/update-doc` (scan complet)
 
+### `/update-scenarios <fonctionnalité>` — Mise à jour des scénarios e2e
+Intègre les nouvelles fonctionnalités dans les scénarios de démo e2e existants, par domaine.
+- **Argument** : fonctionnalité ajoutée ou modifiée (texte libre)
+- Cartographie les workflows Rails (routes, contrôleurs, vues) pour concevoir le parcours utilisateur
+- Identifie le domaine/scénario cible et le point d'insertion dans le parcours existant
+- Noms de tests narratifs et humains (affichés dans la vidéo comme chapitres)
+- Intégration avec `bin/demo` (targets, title cards, MKV chapitres)
+
+Exemple : `/update-scenarios contrôle qualité à la réception` ou `/update-scenarios système de notifications`
+
 ### `/changelog [full]` — Changelog
 Génère ou met à jour `CHANGES_fr.md` à partir des commits récents.
 - **Argument** (optionnel) : `full` pour tout régénérer. Sans argument : ajoute un nouveau jalon
