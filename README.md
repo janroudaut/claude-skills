@@ -17,6 +17,7 @@ Le repository inclut aussi un **template CLAUDE.md** avec des guidelines comport
 | `/explore-approaches` | Compare 2 approches via agents en worktrees isolés | objectif à atteindre |
 | `/polish` | Revue de code : bugs, conformité, couverture tests + corrections QCM | numéro de PR ou branche (optionnel) |
 | `/changelog` | Génère le changelog métier à partir des commits | `full` pour tout régénérer (optionnel) |
+| `/update-doc` | Détecte le drift code↔doc et propose les mises à jour | chemin ou nom du fichier doc (optionnel) |
 
 Voir [SKILLS.md](SKILLS.md) pour la documentation complète avec exemples.
 
@@ -65,7 +66,8 @@ claude-skills/
 │   ├── changelog/SKILL.md
 │   ├── explore-approaches/SKILL.md
 │   ├── feature/SKILL.md
-│   └── polish/SKILL.md
+│   ├── polish/SKILL.md
+│   └── update-doc/SKILL.md
 ├── templates/                 # Templates de configuration
 │   ├── CLAUDE.md              # Guidelines comportementales
 │   └── settings.json          # Hook PostToolUse

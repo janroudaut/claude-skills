@@ -44,6 +44,16 @@ Revue de PRs et code non commité : bugs, conformité CLAUDE.md, couverture test
 
 Exemple : `/polish 42` ou `/polish feat/notifications` ou `/polish` (tout)
 
+### `/update-doc [fichier]` — Mise à jour documentation
+Détecte les écarts entre le code et la documentation, propose et applique les mises à jour.
+- **Argument** (optionnel) : chemin ou nom du fichier doc. Sans argument : scanne le projet et propose un choix
+- Découverte automatique des fichiers Markdown du projet
+- Inférence du code lié à chaque doc
+- Détection du drift : infos obsolètes, fonctionnalités non documentées, incohérences
+- Proposition QCM des modifications, application sélective
+
+Exemple : `/update-doc README.md` ou `/update-doc docs/api.md` ou `/update-doc` (scan complet)
+
 ### `/changelog [full]` — Changelog
 Génère ou met à jour `CHANGES_fr.md` à partir des commits récents.
 - **Argument** (optionnel) : `full` pour tout régénérer. Sans argument : ajoute un nouveau jalon
