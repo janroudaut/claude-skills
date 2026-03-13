@@ -1,0 +1,50 @@
+#!/bin/bash
+# Hook post-édition : lance les tests automatiquement après chaque Edit/Write.
+# Reçoit le JSON d'input Claude Code via stdin.
+# - Fichiers non-code (.md, .json, etc.) → ignorés
+# - Fichiers frontend (views, JS, CSS, helpers) → unit + system tests
+# - Fichiers backend (models, services, controllers, etc.) → unit tests seulement
+#
+# Variables configurables :
+#   TEST_CMD          — commande de tests unitaires/intégration (défaut : bin/rails test)
+#   SYSTEM_TEST_CMD   — commande de tests système (défaut : bin/rails test:system)
+
+set -e
+
+TEST_CMD="${TEST_CMD:-bin/rails test}"
+SYSTEM_TEST_CMD="${SYSTEM_TEST_CMD:-bin/rails test:system}"
+
+INPUT=$(cat)
+FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
+
+# Pas de file_path → rien à faire
+[ -z "$FILE_PATH" ] && exit 0
+
+# Ignorer les fichiers non-code
+case "$FILE_PATH" in
+  *.md|*.json|*.yaml|*.yml|*.txt|*.lock|*.toml) exit 0 ;;
+  */.claude/*|*/CLAUDE.md) exit 0 ;;
+esac
+
+# Déterminer si c'est un changement frontend
+is_frontend=false
+case "$FILE_PATH" in
+  */app/views/*|*/app/javascript/*|*/app/assets/*|*/app/helpers/*)
+    is_frontend=true ;;
+esac
+
+echo "🧪 Tests auto ($(basename "$FILE_PATH"))..."
+
+# Toujours lancer les tests unitaires/intégration
+if ! $TEST_CMD 2>&1 | tail -8; then
+  echo "❌ Tests unitaires en échec"
+  exit 0
+fi
+
+# Tests système uniquement pour les changements frontend
+if [ "$is_frontend" = true ]; then
+  echo "🖥️  Tests système (changement frontend)..."
+  $SYSTEM_TEST_CMD 2>&1 | tail -8
+fi
+
+exit 0
