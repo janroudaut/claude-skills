@@ -9,6 +9,8 @@ Implémente une fonctionnalité de bout en bout : branche, code, tests, commit, 
 
 **Fonctionnalité**: $ARGUMENTS
 
+**Pré-requis** : consulter le CLAUDE.md du projet pour les commandes de test et les conventions du framework.
+
 ## Principes
 
 - **Autonome** : avancer sans demander sauf blocage réel

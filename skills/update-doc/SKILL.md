@@ -9,6 +9,8 @@ Analyse les écarts entre le code actuel et la documentation, puis propose et ap
 
 **Scope**: $ARGUMENTS
 
+**Pré-requis** : consulter le CLAUDE.md du projet pour la structure du code et les conventions.
+
 ## Principes
 
 - **Non-intrusif** : ne jamais modifier sans validation de l'utilisateur

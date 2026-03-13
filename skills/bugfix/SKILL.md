@@ -9,6 +9,8 @@ Diagnostique et corrige un bug en suivant un cycle strict : reproduire avec un t
 
 **Bug**: $ARGUMENTS
 
+**Pré-requis** : consulter le CLAUDE.md du projet pour les commandes de test et les conventions du framework.
+
 ## Principes
 
 - **Test-first** : JAMAIS de correction sans test de reproduction qui échoue d'abord

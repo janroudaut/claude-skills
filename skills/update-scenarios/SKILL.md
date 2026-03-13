@@ -11,6 +11,8 @@ Chaque scénario correspond à un **domaine** ou **focus** du workflow de l'appl
 
 **Fonctionnalité**: $ARGUMENTS
 
+**Pré-requis** : consulter le CLAUDE.md du projet pour les commandes de test, la structure du code (routes, vues, contrôleurs) et les conventions du framework.
+
 ## Principes
 
 - **Intégration, pas isolation** : la nouvelle feature s'insère dans le workflow existant du bon domaine, pas dans un test orphelin

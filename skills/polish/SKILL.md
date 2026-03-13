@@ -9,6 +9,8 @@ Polish code that isn't on main yet: review it, propose fixes, apply only user-ap
 
 **Target**: $ARGUMENTS
 
+**Prerequisite**: check the project's CLAUDE.md for test commands and framework conventions.
+
 ## Important Principles
 
 - **Non-intrusive**: NEVER modify code without explicit user approval
