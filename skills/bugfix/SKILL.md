@@ -1,101 +1,101 @@
 ---
-description: Diagnostic et correction de bug en mode test-first — reproduire, corriger, vérifier, itérer
-argument-hint: description du bug (symptôme observé)
+description: Test-first bug diagnosis and fix — reproduce, fix, verify, iterate
+argument-hint: bug description (observed symptom)
 ---
 
-# /bugfix — Correction Test-First
+# /bugfix — Test-First Fix
 
-Diagnostique et corrige un bug en suivant un cycle strict : reproduire avec un test, corriger, vérifier.
+Diagnoses and fixes a bug following a strict cycle: reproduce with a test, fix, verify.
 
 **Bug**: $ARGUMENTS
 
-**Pré-requis** : consulter le CLAUDE.md du projet pour les commandes de test et les conventions du framework.
+**Prerequisite**: check the project's CLAUDE.md for test commands and framework conventions.
 
-## Principes
+## Principles
 
-- **Test-first** : JAMAIS de correction sans test de reproduction qui échoue d'abord
-- **Root cause** : trouver la vraie cause, pas un contournement
-- **Itératif** : si le fix ne marche pas, changer de stratégie (pas de variations mineures)
-- **Autonome total** : itérer jusqu'au vert SANS demander à l'utilisateur. Ne s'arrêter que si toutes les stratégies sont épuisées
-
----
-
-## Phase 1 : Diagnostic et test (agents parallèles)
-
-Lancer 2 agents Task en parallèle :
-
-### Agent A — Diagnostic
-1. Lire les fichiers pertinents mentionnés dans la description du bug
-2. Tracer le flux de données complet (save → load → render)
-3. Vérifier les DEUX côtés (client ET serveur)
-4. Retourner : cause probable, fichier:ligne suspecte, stratégie de fix recommandée
-
-### Agent B — Test de reproduction
-1. Identifier le bon fichier de test (system test si UI, unit/integration sinon)
-2. Écrire un test minimal qui **reproduit exactement le symptôme**
-3. Lancer le test pour confirmer qu'il échoue (utiliser la commande de test du projet)
-
-4. Vérifier que le test échoue **pour la bonne raison** (pas une erreur de setup)
-5. Retourner : le test et sa sortie d'erreur
-
-Si l'agent B n'arrive pas à reproduire le bug :
-- Utiliser les findings de l'agent A pour ajuster l'angle
-- Essayer un 2e test différent
-- Si impossible à reproduire après 2 tentatives, signaler à l'utilisateur
-
-**Output** : Diagnostic + test qui échoue.
+- **Test-first**: NEVER fix without a failing reproduction test first
+- **Root cause**: find the real cause, not a workaround
+- **Iterative**: if the fix doesn't work, change strategy (no minor variations)
+- **Fully autonomous**: iterate until green WITHOUT asking the user. Only stop if all strategies are exhausted
 
 ---
 
-## Phase 2 : Boucle de correction autonome
+## Phase 1: Diagnosis and Test (parallel agents)
 
-**Ne PAS demander à l'utilisateur — itérer jusqu'au vert.**
+Launch 2 Task agents in parallel:
 
-1. Implémenter la correction **minimale** — ne toucher que le code nécessaire
-2. Relancer le test de reproduction
+### Agent A — Diagnosis
+1. Read relevant files mentioned in the bug description
+2. Trace the complete data flow (save → load → render)
+3. Check BOTH sides (client AND server)
+4. Return: probable cause, suspicious file:line, recommended fix strategy
 
-### Si le test échoue encore :
+### Agent B — Reproduction Test
+1. Identify the right test file (system test if UI, unit/integration otherwise)
+2. Write a minimal test that **reproduces exactly the symptom**
+3. Run the test to confirm it fails (use the project's test command)
 
-- **Ne PAS** réessayer la même approche avec des variations mineures
-- Analyser POURQUOI le fix n'a pas marché
-- Choisir une stratégie **fondamentalement différente**
-- Réessayer — boucler jusqu'à 5 stratégies différentes
+4. Verify the test fails **for the right reason** (not a setup error)
+5. Return: the test and its error output
 
-### Si le test passe :
+If Agent B cannot reproduce the bug:
+- Use Agent A's findings to adjust the angle
+- Try a 2nd different test
+- If impossible to reproduce after 2 attempts, report to the user
 
-Passer à la Phase 3.
-
-### Si 5 stratégies échouent :
-
-S'arrêter et présenter à l'utilisateur :
-- Les 5 approches tentées et pourquoi chacune a échoué
-- L'hypothèse révisée sur la cause du bug
-- Une suggestion pour débloquer
-
----
-
-## Phase 3 : Vérification complète
-
-1. Lancer la suite de tests complète pour détecter les régressions
-2. Si des tests existants cassent :
-   - Analyser si c'est une régression réelle ou un test fragile
-   - Corriger les régressions réelles
-   - Signaler les tests fragiles sans les modifier
+**Output**: Diagnosis + failing test.
 
 ---
 
-## Phase 4 : Résumé
+## Phase 2: Autonomous Fix Loop
 
-Présenter :
-- **Cause** : la root cause en 1-2 phrases
-- **Fix** : ce qui a été modifié (fichiers et lignes)
-- **Test** : le test ajouté
-- **Régressions** : aucune / liste des problèmes détectés
+**Do NOT ask the user — iterate until green.**
 
-Ne PAS commiter automatiquement — attendre que l'utilisateur le demande.
+1. Implement the **minimal** fix — only touch the necessary code
+2. Re-run the reproduction test
+
+### If the test still fails:
+
+- **Do NOT** retry the same approach with minor variations
+- Analyze WHY the fix didn't work
+- Choose a **fundamentally different** strategy
+- Retry — loop up to 5 different strategies
+
+### If the test passes:
+
+Move to Phase 3.
+
+### If 5 strategies fail:
+
+Stop and present to the user:
+- The 5 approaches attempted and why each failed
+- The revised hypothesis about the bug's cause
+- A suggestion to unblock
+
+---
+
+## Phase 3: Full Verification
+
+1. Run the full test suite to detect regressions
+2. If existing tests break:
+   - Analyze whether it's a real regression or a flaky test
+   - Fix real regressions
+   - Report flaky tests without modifying them
+
+---
+
+## Phase 4: Summary
+
+Present:
+- **Cause**: the root cause in 1-2 sentences
+- **Fix**: what was modified (files and lines)
+- **Test**: the added test
+- **Regressions**: none / list of detected issues
+
+Do NOT commit automatically — wait for the user to ask.
 
 ---
 
 ## Notes
 
-- Respecter les conventions de test du projet (voir CLAUDE.md pour les helpers et contraintes spécifiques)
+- Follow the project's testing conventions (see CLAUDE.md for specific helpers and constraints)

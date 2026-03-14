@@ -1,17 +1,17 @@
 #!/bin/bash
-# Installe les skills Claude Code dans un projet cible.
+# Install Claude Code skills into a target project.
 #
-# Usage :
-#   bin/install [options] [chemin_du_projet]
+# Usage:
+#   bin/install [options] [project_path]
 #
-# Options :
-#   --all       Tout installer (skills + hook + template)
-#   --skills    Installer les skills uniquement
-#   --hook      Installer le test-hook + settings.json
-#   --template  Copier le template CLAUDE.md
-#   (aucune)    Mode interactif
+# Options:
+#   --all       Install everything (skills + hook + template)
+#   --skills    Install skills only
+#   --hook      Install test-hook + settings.json
+#   --template  Copy the CLAUDE.md template
+#   (none)      Interactive mode
 #
-# Si chemin_du_projet est omis, utilise le répertoire courant.
+# If project_path is omitted, uses the current directory.
 
 set -e
 
@@ -19,7 +19,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 SKILLS_DIR="$SCRIPT_DIR/skills"
 TEMPLATES_DIR="$SCRIPT_DIR/templates"
 
-# Couleurs
+# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -43,14 +43,14 @@ while [[ $# -gt 0 ]]; do
     --hook)     MODE="hook"; shift ;;
     --template) MODE="template"; shift ;;
     -h|--help)
-      echo "Usage : bin/install [--all|--skills|--hook|--template] [chemin_du_projet]"
+      echo "Usage: bin/install [--all|--skills|--hook|--template] [project_path]"
       echo ""
-      echo "Options :"
-      echo "  --all       Tout installer (skills + hook + template)"
-      echo "  --skills    Installer les skills uniquement"
-      echo "  --hook      Installer le test-hook + settings.json"
-      echo "  --template  Copier le template CLAUDE.md"
-      echo "  (aucune)    Mode interactif"
+      echo "Options:"
+      echo "  --all       Install everything (skills + hook + template)"
+      echo "  --skills    Install skills only"
+      echo "  --hook      Install test-hook + settings.json"
+      echo "  --template  Copy the CLAUDE.md template"
+      echo "  (none)      Interactive mode"
       exit 0
       ;;
     *)          TARGET="$1"; shift ;;
@@ -58,22 +58,22 @@ while [[ $# -gt 0 ]]; do
 done
 
 TARGET="${TARGET:-.}"
-TARGET="$(cd "$TARGET" 2>/dev/null && pwd)" || { error "Répertoire '$TARGET' introuvable"; exit 1; }
+TARGET="$(cd "$TARGET" 2>/dev/null && pwd)" || { error "Directory '$TARGET' not found"; exit 1; }
 
 echo ""
 echo "╔══════════════════════════════════════╗"
 echo "║   Claude Skills — Installation       ║"
 echo "╚══════════════════════════════════════╝"
 echo ""
-info "Projet cible : $TARGET"
+info "Target project: $TARGET"
 echo ""
 
 # --- Helpers ---
 
 confirm() {
   local msg="$1"
-  read -r -p "$(echo -e "${YELLOW}?${NC}  $msg [o/N] ")" response
-  [[ "$response" =~ ^[oOyY]$ ]]
+  read -r -p "$(echo -e "${YELLOW}?${NC}  $msg [y/N] ")" response
+  [[ "$response" =~ ^[yY]$ ]]
 }
 
 safe_copy() {
@@ -83,11 +83,11 @@ safe_copy() {
 
   if [ -f "$dst" ]; then
     if diff -q "$src" "$dst" > /dev/null 2>&1; then
-      info "$label — déjà à jour"
+      info "$label — already up to date"
       return 0
     fi
-    if ! confirm "$label existe déjà. Écraser ?"; then
-      warn "$label — ignoré"
+    if ! confirm "$label already exists. Overwrite?"; then
+      warn "$label — skipped"
       return 0
     fi
   fi
@@ -100,7 +100,7 @@ safe_copy() {
 # --- Install functions ---
 
 install_skills() {
-  info "Installation des skills..."
+  info "Installing skills..."
   echo ""
 
   for skill_dir in "$SKILLS_DIR"/*/; do
@@ -114,7 +114,7 @@ install_skills() {
 }
 
 install_hook() {
-  info "Installation du hook de test..."
+  info "Installing test hook..."
   echo ""
 
   safe_copy \
@@ -122,7 +122,7 @@ install_hook() {
     "$TARGET/bin/test-hook" \
     "bin/test-hook"
 
-  # Rendre exécutable
+  # Make executable
   chmod +x "$TARGET/bin/test-hook" 2>/dev/null || true
 
   safe_copy \
@@ -134,13 +134,13 @@ install_hook() {
 }
 
 install_template() {
-  info "Installation du template CLAUDE.md..."
+  info "Installing CLAUDE.md template..."
   echo ""
 
   if [ -f "$TARGET/CLAUDE.md" ]; then
-    warn "CLAUDE.md existe déjà dans le projet."
-    warn "Le template est disponible dans : $TEMPLATES_DIR/CLAUDE.md"
-    warn "Comparez et intégrez manuellement les sections pertinentes."
+    warn "CLAUDE.md already exists in the project."
+    warn "The template is available at: $TEMPLATES_DIR/CLAUDE.md"
+    warn "Compare and manually integrate the relevant sections."
   else
     safe_copy \
       "$TEMPLATES_DIR/CLAUDE.md" \
@@ -168,16 +168,16 @@ case "$MODE" in
     install_template
     ;;
   "")
-    # Mode interactif
-    echo "Que souhaitez-vous installer ?"
+    # Interactive mode
+    echo "What would you like to install?"
     echo ""
-    echo "  1) Tout (skills + hook + template)"
-    echo "  2) Skills uniquement"
-    echo "  3) Hook de test + settings.json"
-    echo "  4) Template CLAUDE.md"
-    echo "  5) Annuler"
+    echo "  1) Everything (skills + hook + template)"
+    echo "  2) Skills only"
+    echo "  3) Test hook + settings.json"
+    echo "  4) CLAUDE.md template"
+    echo "  5) Cancel"
     echo ""
-    read -r -p "Choix [1-5] : " choice
+    read -r -p "Choice [1-5]: " choice
 
     echo ""
     case "$choice" in
@@ -185,12 +185,12 @@ case "$MODE" in
       2) install_skills ;;
       3) install_hook ;;
       4) install_template ;;
-      5) info "Annulé."; exit 0 ;;
-      *) error "Choix invalide"; exit 1 ;;
+      5) info "Cancelled."; exit 0 ;;
+      *) error "Invalid choice"; exit 1 ;;
     esac
     ;;
 esac
 
 echo "────────────────────────────────────────"
-ok "Installation terminée !"
+ok "Installation complete!"
 echo ""

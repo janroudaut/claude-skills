@@ -60,8 +60,8 @@ target_file() {
 # Map target name → human-readable title (used in title cards + MKV metadata)
 target_title() {
   case "$1" in
-    # e2e)       echo "E2E — Parcours complet" ;;
-    # reception) echo "Workflow Réception" ;;
+    # e2e)       echo "E2E — Full Journey" ;;
+    # reception) echo "Reception Workflow" ;;
     *) echo "$1" ;;
   esac
 }

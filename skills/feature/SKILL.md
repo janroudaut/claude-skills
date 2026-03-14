@@ -1,154 +1,154 @@
 ---
-description: Pipeline autonome feature branch → implémentation → tests → commit → PR
-argument-hint: description de la fonctionnalité à implémenter
+description: Autonomous pipeline — feature branch, implement, test, commit, PR
+argument-hint: description of the feature to implement
 ---
 
-# /feature — Pipeline Feature → PR
+# /feature — Feature → PR Pipeline
 
-Implémente une fonctionnalité de bout en bout : branche, code, tests, commit, PR. Pipeline autonome avec points de contrôle.
+Implements a feature end-to-end: branch, code, tests, commit, PR. Autonomous pipeline with checkpoints.
 
-**Fonctionnalité**: $ARGUMENTS
+**Feature**: $ARGUMENTS
 
-**Pré-requis** : consulter le CLAUDE.md du projet pour les commandes de test et les conventions du framework.
+**Prerequisite**: check the project's CLAUDE.md for test commands and framework conventions.
 
-## Principes
+## Principles
 
-- **Autonome** : avancer sans demander sauf blocage réel
-- **Incrémental** : commits logiques séparés, pas un gros commit monolithique
-- **Vérifié** : chaque étape validée avant de passer à la suivante
-- **Réversible** : branche dédiée, main jamais touché
+- **Autonomous**: move forward without asking unless truly blocked
+- **Incremental**: separate logical commits, not one monolithic commit
+- **Verified**: each step validated before moving to the next
+- **Reversible**: dedicated branch, main never touched
 
 ---
 
-## Phase 1 : Cadrage rapide (2-3 minutes max)
+## Phase 1: Quick Scoping (2-3 minutes max)
 
-1. Lire les fichiers pertinents pour comprendre le contexte
-2. Consulter les implémentations existantes similaires dans le codebase
-3. Définir le scope en 3-5 bullet points :
+1. Read relevant files to understand the context
+2. Check existing similar implementations in the codebase
+3. Define the scope in 3-5 bullet points:
    ```
-   - [ ] Objectif 1
-   - [ ] Objectif 2
-   - [ ] Objectif 3
+   - [ ] Goal 1
+   - [ ] Goal 2
+   - [ ] Goal 3
    ```
 
-Présenter le scope à l'utilisateur via `AskUserQuestion` :
-- "Valider le scope" (Recommandé)
-- "Ajuster le scope"
+Present the scope to the user via `AskUserQuestion`:
+- "Validate scope" (Recommended)
+- "Adjust scope"
 
-**Ne PAS commencer à coder avant validation du scope.**
+**Do NOT start coding before scope validation.**
 
 ---
 
-## Phase 2 : Branche et implémentation
+## Phase 2: Branch and Implementation
 
-1. Créer la branche :
+1. Create the branch:
    ```bash
    git checkout -b feat/<kebab-case-name>
    ```
 
-2. Implémenter la fonctionnalité en suivant les conventions du projet :
-   - Respecter les patterns existants dans le codebase
-   - Suivre les conventions décrites dans le CLAUDE.md du projet
+2. Implement the feature following the project conventions:
+   - Respect existing patterns in the codebase
+   - Follow conventions described in the project's CLAUDE.md
 
-3. Après chaque bloc logique de changements, lancer les tests pertinents
+3. After each logical block of changes, run the relevant tests
 
-4. Corriger les échecs avant de continuer.
-
----
-
-## Phase 3 : Tests
-
-1. Écrire les tests pour la nouvelle fonctionnalité :
-   - Test e2e/système si c'est un changement UI
-   - Test unitaire/intégration pour la logique métier
-   - Couvrir le happy path + un edge case
-
-2. Lancer les nouveaux tests
-
-3. Si échec, corriger et relancer (max 5 itérations).
-
-4. Lancer la suite complète pour détecter les régressions
-
-5. **Si blocage persistant** (tests qui ne passent pas après 5 tentatives) :
-   - Ne PAS s'arrêter — continuer le pipeline en mode dégradé
-   - Documenter le problème pour la PR (voir Phase 5)
+4. Fix failures before continuing.
 
 ---
 
-## Phase 4 : Commits
+## Phase 3: Tests
 
-Séparer les changements en commits logiques :
-- Code applicatif (modèles, contrôleurs, vues, JS, CSS)
+1. Write tests for the new feature:
+   - E2e/system test if it's a UI change
+   - Unit/integration test for business logic
+   - Cover the happy path + one edge case
+
+2. Run the new tests
+
+3. If failure, fix and re-run (max 5 iterations).
+
+4. Run the full suite to detect regressions
+
+5. **If persistent blocker** (tests not passing after 5 attempts):
+   - Do NOT stop — continue the pipeline in degraded mode
+   - Document the issue for the PR (see Phase 5)
+
+---
+
+## Phase 4: Commits
+
+Separate changes into logical commits:
+- Application code (models, controllers, views, JS, CSS)
 - Tests
-- Migrations (si applicable)
+- Migrations (if applicable)
 
-Utiliser des messages descriptifs en français avec accents corrects.
-Ne PAS utiliser de préfixes conventionnels sauf `[meta]` et `[regen]`.
+Use descriptive commit messages.
+Do NOT use conventional prefixes except `[meta]` and `[regen]`.
 
 ---
 
-## Phase 5 : PR
+## Phase 5: PR
 
-1. Pousser la branche :
+1. Push the branch:
    ```bash
    git push -u origin feat/<branch-name>
    ```
 
-2. Créer la PR :
-   - **Si tous les tests passent** → PR normale :
+2. Create the PR:
+   - **If all tests pass** → normal PR:
      ```bash
-     gh pr create --title "<titre court>" --body "$(cat <<'EOF'
-     ## Résumé
-     <3-5 bullet points décrivant les changements>
+     gh pr create --title "<short title>" --body "$(cat <<'EOF'
+     ## Summary
+     <3-5 bullet points describing the changes>
 
      ## Tests
-     - [x] Tests unitaires/intégration ajoutés
-     - [x] Tests système ajoutés (si UI)
-     - [x] Suite complète verte
+     - [x] Unit/integration tests added
+     - [x] System tests added (if UI)
+     - [x] Full suite green
 
-     🤖 Generated with [Claude Code](https://claude.com/claude-code) — `/feature`
+     Generated with [Claude Code](https://claude.com/claude-code) — `/feature`
      EOF
      )"
      ```
-   - **Si un blocage persiste** → PR en draft avec le problème documenté :
+   - **If a blocker persists** → draft PR with documented issue:
      ```bash
-     gh pr create --draft --title "<titre court>" --body "$(cat <<'EOF'
-     ## Résumé
-     <3-5 bullet points décrivant les changements>
+     gh pr create --draft --title "<short title>" --body "$(cat <<'EOF'
+     ## Summary
+     <3-5 bullet points describing the changes>
 
-     ## ⚠️ Blocage non résolu
-     <description du problème, approches tentées, suggestion pour débloquer>
+     ## Unresolved Blocker
+     <problem description, approaches tried, suggestion to unblock>
 
      ## Tests
-     - [x] Tests unitaires/intégration ajoutés
-     - [ ] Suite complète verte — blocage ci-dessus
+     - [x] Unit/integration tests added
+     - [ ] Full suite green — blocker above
 
-     🤖 Generated with [Claude Code](https://claude.com/claude-code) — `/feature`
+     Generated with [Claude Code](https://claude.com/claude-code) — `/feature`
      EOF
      )"
      ```
 
-3. Afficher l'URL de la PR.
+3. Display the PR URL.
 
 ---
 
-## Phase 6 : Résumé
+## Phase 6: Summary
 
-Présenter :
-- **PR** : URL
-- **Fichiers modifiés** : liste
-- **Tests ajoutés** : nombre et couverture
-- **Scope couvert** : rappel des objectifs cochés
+Present:
+- **PR**: URL
+- **Modified files**: list
+- **Tests added**: count and coverage
+- **Scope covered**: reminder of checked goals
 
-Demander à l'utilisateur s'il veut :
-- Lancer `/polish` sur la PR
-- Merger directement
-- Ajuster quelque chose
+Ask the user if they want to:
+- Run `/polish` on the PR
+- Merge directly
+- Adjust something
 
 ---
 
 ## Notes
 
-- Ne JAMAIS modifier `CLAUDE.md`, `MEMORY.md`, ou les fichiers `.claude/`
-- Si un objectif du scope s'avère trop complexe, le signaler et proposer de le sortir dans une PR séparée
-- Respecter les contraintes projet-spécifiques décrites dans le CLAUDE.md du projet
+- NEVER modify `CLAUDE.md`, `MEMORY.md`, or `.claude/` files
+- If a scope goal turns out to be too complex, flag it and propose splitting it into a separate PR
+- Follow project-specific constraints described in the project's CLAUDE.md

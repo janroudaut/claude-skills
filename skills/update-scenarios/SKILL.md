@@ -1,216 +1,216 @@
 ---
-description: Intègre les nouvelles fonctionnalités dans les scénarios e2e existants pour maintenir des parcours utilisateur "idéaux" à jour
-argument-hint: fonctionnalité ajoutée/modifiée (ex. "contrôle qualité à la réception")
+description: 'Integrate new features into existing e2e scenarios to keep "ideal" user journeys up to date'
+argument-hint: 'added/modified feature (e.g. "quality control at reception")'
 ---
 
-# /update-scenarios — Mise à jour des Scénarios E2E
+# /update-scenarios — E2E Scenario Update
 
-Quand une fonctionnalité est ajoutée ou modifiée, cette skill l'intègre dans les scénarios de démo e2e existants pour que les parcours utilisateur restent à jour et enregistrables avec `bin/demo --record`.
+When a feature is added or modified, this skill integrates it into existing e2e demo scenarios so that user journeys stay up to date and recordable with `bin/demo --record`.
 
-Chaque scénario correspond à un **domaine** ou **focus** du workflow de l'application (ex. réception, livraison, facturation). Ils peuvent être lancés ensemble ou isolément.
+Each scenario corresponds to a **domain** or **focus** of the application workflow (e.g., reception, delivery, billing). They can be run together or in isolation.
 
-**Fonctionnalité**: $ARGUMENTS
+**Feature**: $ARGUMENTS
 
-**Pré-requis** : consulter le CLAUDE.md du projet pour les commandes de test, la structure du code (routes, vues, contrôleurs) et les conventions du framework.
+**Prerequisite**: check the project's CLAUDE.md for test commands, code structure (routes, views, controllers) and framework conventions.
 
-## Principes
+## Principles
 
-- **Intégration, pas isolation** : la nouvelle feature s'insère dans le workflow existant du bon domaine, pas dans un test orphelin
-- **Parcours idéal** : chaque scénario montre le parcours typique d'un utilisateur dans un domaine donné
-- **Multi-domaine** : une appli a plusieurs scénarios (un par domaine/focus), exécutables ensemble (`bin/demo all`) ou séparément (`bin/demo reception`)
-- **Lisible en vidéo** : noms de tests humains et narratifs — ils apparaissent comme chapitres MKV et dans la barre en bas
+- **Integration, not isolation**: the new feature fits into the existing workflow of the right domain, not into an orphan test
+- **Ideal journey**: each scenario shows the typical user journey within a given domain
+- **Multi-domain**: an app has multiple scenarios (one per domain/focus), runnable together (`bin/demo all`) or separately (`bin/demo reception`)
+- **Video-readable**: human-readable, narrative test names — they appear as MKV chapters and in the bottom bar
 
 ---
 
-## Phase 1 : Comprendre la feature et son domaine
+## Phase 1: Understand the Feature and Its Domain
 
-### 1A. Analyser la fonctionnalité
+### 1A. Analyze the Feature
 
-1. Identifier les fichiers de la feature : routes, contrôleurs/handlers, vues/templates, JS
-2. Tracer le parcours utilisateur : à quel moment du workflow cette feature intervient-elle ?
-3. Identifier les interactions : formulaires, modals, sélections, clics, feedback visuel
+1. Identify the feature's files: routes, controllers/handlers, views/templates, JS
+2. Trace the user journey: at what point in the workflow does this feature come in?
+3. Identify interactions: forms, modals, selections, clicks, visual feedback
 
-### 1B. Cartographier les scénarios existants
+### 1B. Map Existing Scenarios
 
-1. Lire les scénarios de démo actuels :
+1. Read current demo scenarios:
    ```bash
    find test/ tests/ spec/ -name "demo_*" -o -name "*_workflow_*" -o -name "*_scenario_*" -o -name "*_e2e_*" 2>/dev/null
    ```
-2. Lire `bin/demo` (si existant) pour comprendre les domaines couverts :
-   - Quels targets existent ? (ex. `e2e`, `reception`, `delivery`)
-   - Quels workflows chaque target couvre ?
-3. Pour chaque scénario, lister les étapes du parcours
+2. Read `bin/demo` (if it exists) to understand covered domains:
+   - What targets exist? (e.g., `e2e`, `reception`, `delivery`)
+   - What workflows does each target cover?
+3. For each scenario, list the journey steps
 
-### 1C. Identifier le domaine cible
+### 1C. Identify the Target Domain
 
-Déterminer **dans quel scénario** la feature s'insère :
-- Feature liée à la réception → scénario `reception`
-- Feature transversale (ex. notifications) → plusieurs scénarios impactés
-- Feature d'un nouveau domaine → nouveau scénario à créer
+Determine **which scenario** the feature fits into:
+- Feature related to reception → `reception` scenario
+- Cross-cutting feature (e.g., notifications) → multiple scenarios impacted
+- Feature for a new domain → new scenario to create
 
-Puis trouver le **point d'insertion** dans le parcours :
+Then find the **insertion point** in the journey:
 
 ```
-Workflow "réception" existant :  [Création] → [Réception physique] → [Validation] → [Clôture]
+Existing "reception" workflow:    [Create] → [Physical Receipt] → [Validation] → [Close]
                                                                 ↑
-Nouvelle feature :                                         [Contrôle QC]
+New feature:                                               [QC Check]
                                                                 ↓
-Workflow mis à jour :            [Création] → [Réception physique] → [Contrôle QC] → [Validation] → [Clôture]
+Updated workflow:                 [Create] → [Physical Receipt] → [QC Check] → [Validation] → [Close]
 ```
 
 ---
 
-## Phase 2 : Proposition
+## Phase 2: Proposal
 
-Présenter via `AskUserQuestion` :
+Present via `AskUserQuestion`:
 
-- Quel(s) scénario(s) existant(s) sont impactés (domaine)
-- Où la feature s'insère dans chaque parcours
-- Si un nouveau chapitre (= test) est nécessaire ou si ça tient dans un test existant
-- Si un nouveau domaine/scénario doit être créé
+- Which existing scenario(s) are impacted (domain)
+- Where the feature fits in each journey
+- Whether a new chapter (= test) is needed or it fits in an existing test
+- Whether a new domain/scenario needs to be created
 
-Options :
-- "Valider l'intégration" (Recommandé)
-- "Ajuster"
+Options:
+- "Validate integration" (Recommended)
+- "Adjust"
 
-**Règle de découpage** : si l'ajout allonge un test de plus de ~20 secondes de vidéo, extraire un nouveau test (= nouveau chapitre MKV).
+**Splitting rule**: if the addition extends a test by more than ~20 seconds of video, extract a new test (= new MKV chapter).
 
-**Attendre la validation avant de modifier le code.**
+**Wait for validation before modifying code.**
 
 ---
 
-## Phase 3 : Mise à jour des scénarios
+## Phase 3: Update Scenarios
 
-### Modifier un test existant
+### Modify an Existing Test
 
-Insérer les nouvelles étapes au bon endroit dans le parcours :
+Insert the new steps at the right place in the journey:
 
 ```ruby
-test "Réception complète avec validation" do
-  # ... étapes existantes de création ...
+test "Complete reception with validation" do
+  # ... existing creation steps ...
   demo_pause
 
-  # ── NOUVEAU : Contrôle qualité ──
-  click_on "Lancer le contrôle"
+  # ── NEW: Quality control ──
+  click_on "Start inspection"
   demo_pause
 
   within_modal do
-    select "Conforme", from: "Résultat"
+    select "Conforming", from: "Result"
     demo_tick
-    click_on "Valider"
+    click_on "Validate"
   end
   demo_pause
 
-  assert_text "Contrôle validé"
+  assert_text "Inspection validated"
   demo_pause
-  # ── FIN NOUVEAU ──
+  # ── END NEW ──
 
-  # ... étapes existantes de clôture ...
+  # ... existing closing steps ...
 end
 ```
 
-### Ajouter un nouveau chapitre (test) dans un scénario existant
+### Add a New Chapter (test) in an Existing Scenario
 
-Si la feature justifie son propre chapitre vidéo :
+If the feature warrants its own video chapter:
 
 ```ruby
-test "Contrôle qualité — anomalie signalée et traitée" do
+test "Quality control — anomaly reported and resolved" do
   reception = setup_reception_pending_qc
 
-  sign_in_as("responsable_qc")
+  sign_in_as("qc_manager")
   demo_pause
 
   visit reception_path(reception)
   demo_pause
 
-  # ... interactions QC ...
-  demo_pause(4)  # montrer le résultat
+  # ... QC interactions ...
+  demo_pause(4)  # show the result
 end
 ```
 
-### Créer un nouveau scénario (nouveau domaine)
+### Create a New Scenario (new domain)
 
-Si la feature ouvre un nouveau domaine de l'application :
+If the feature opens a new application domain:
 
-1. Créer le fichier de test e2e pour le domaine
-2. Concevoir le parcours complet du domaine (pas juste la feature)
-3. Ajouter dans `bin/demo` : `target_file`, `target_title`, `expand_targets`
+1. Create the e2e test file for the domain
+2. Design the complete journey for the domain (not just the feature)
+3. Add to `bin/demo`: `target_file`, `target_title`, `expand_targets`
 
-### Noms de tests : humains et narratifs
+### Test Names: Human-Readable and Narrative
 
-Les noms apparaissent dans la vidéo. Écrire comme un titre de chapitre :
+Names appear in the video. Write them like chapter titles:
 
 ```ruby
-# ✗ Technique
+# ✗ Technical
 test "reception_with_qc_check_and_anomaly_report"
 
-# ✓ Narratif — c'est un titre de chapitre vidéo
-test "Contrôle qualité — anomalie signalée et traitée"
+# ✓ Narrative — this is a video chapter title
+test "Quality control — anomaly reported and resolved"
 ```
 
-### Rythme des interactions
+### Interaction Tempo
 
 | Action | Pause | Helper |
 |--------|-------|--------|
-| Chargement de page, soumission | 2-3s | `demo_pause` |
-| Clic, focus, saisie | 0.3-0.5s | `demo_tick` |
-| Résultat important à voir | 3-5s | `demo_pause(4)` |
+| Page load, form submission | 2-3s | `demo_pause` |
+| Click, focus, input | 0.3-0.5s | `demo_tick` |
+| Important result to show | 3-5s | `demo_pause(4)` |
 
-### Données de test
+### Test Data
 
-- Adapter le `setup` existant du scénario pour inclure les données de la feature
-- Si les données sont complexes, ajouter un helper privé `setup_<context>_data`
-- Noms réalistes : `"Transports Martin"` pas `"Test 1"` — l'UI doit sembler en production
-
----
-
-## Phase 4 : Intégration avec bin/demo
-
-### Si un nouveau scénario (domaine) est créé :
-
-1. Ajouter dans `target_file()` : mapping target → fichier test
-2. Ajouter dans `target_title()` : titre humain pour les title cards
-3. Inclure dans `expand_targets()` (composite `all`)
-4. Mettre à jour `--list`
-
-### Si seuls des tests existants sont modifiés :
-
-Rien à changer dans `bin/demo` — les chapitres MKV se mettent à jour automatiquement via les noms de tests.
-
-### Si `bin/demo` n'existe pas :
-
-Proposer d'installer le template depuis claude-skills.
+- Adapt the existing scenario `setup` to include the feature's data
+- If data is complex, add a private helper `setup_<context>_data`
+- Realistic names: `"Martin Transport"` not `"Test 1"` — the UI should look like production
 
 ---
 
-## Phase 5 : Vérification
+## Phase 4: Integration with bin/demo
 
-1. Lancer le scénario modifié (commande de test du projet)
+### If a new scenario (domain) is created:
 
-2. Vérifier visuellement si possible :
+1. Add to `target_file()`: mapping target → test file
+2. Add to `target_title()`: human-readable title for title cards
+3. Include in `expand_targets()` (composite `all`)
+4. Update `--list`
+
+### If only existing tests are modified:
+
+Nothing to change in `bin/demo` — MKV chapters update automatically from test names.
+
+### If `bin/demo` doesn't exist:
+
+Propose installing the template from claude-skills.
+
+---
+
+## Phase 5: Verification
+
+1. Run the modified scenario (project's test command)
+
+2. Visually verify if possible:
    ```bash
    bin/demo <target>
    ```
 
-3. Vérifier la cohérence du parcours : les étapes s'enchaînent-elles naturellement ?
+3. Check journey consistency: do the steps flow naturally?
 
 ---
 
-## Phase 6 : Résumé
+## Phase 6: Summary
 
-Présenter :
-- **Domaine(s) impacté(s)** : quels scénarios modifiés
-- **Point d'insertion** : où la feature s'intègre dans le workflow
-- **Chapitres ajoutés/modifiés** : noms des tests (= titres vidéo)
-- **Nouveau domaine** : si un scénario a été créé, sa target `bin/demo`
+Present:
+- **Impacted domain(s)**: which scenarios were modified
+- **Insertion point**: where the feature fits in the workflow
+- **Chapters added/modified**: test names (= video titles)
+- **New domain**: if a scenario was created, its `bin/demo` target
 
-Ne PAS commiter automatiquement — attendre que l'utilisateur le demande.
+Do NOT commit automatically — wait for the user to ask.
 
 ---
 
 ## Notes
 
-- L'objectif est de maintenir des **parcours idéaux par domaine** — pas une collection de tests isolés
-- Chaque domaine = un scénario = une target `bin/demo` = une vidéo avec chapitres
-- Si un helper d'interaction manque (drag-drop, right-click, canvas), le signaler plutôt que l'inventer
-- Les scénarios de démo complètent les tests fonctionnels — ils ne les remplacent pas
+- The goal is to maintain **ideal journeys per domain** — not a collection of isolated tests
+- Each domain = one scenario = one `bin/demo` target = one video with chapters
+- If an interaction helper is missing (drag-drop, right-click, canvas), report it rather than inventing one
+- Demo scenarios complement functional tests — they don't replace them

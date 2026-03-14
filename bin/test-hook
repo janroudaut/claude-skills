@@ -1,13 +1,13 @@
 #!/bin/bash
-# Hook post-édition : lance les tests automatiquement après chaque Edit/Write.
-# Reçoit le JSON d'input Claude Code via stdin.
-# - Fichiers non-code (.md, .json, etc.) → ignorés
-# - Fichiers frontend (views, JS, CSS, helpers) → unit + system tests
-# - Fichiers backend (models, services, controllers, etc.) → unit tests seulement
+# Post-edit hook: runs tests automatically after each Edit/Write.
+# Receives Claude Code JSON input via stdin.
+# - Non-code files (.md, .json, etc.) → ignored
+# - Frontend files (views, JS, CSS, helpers) → unit + system tests
+# - Backend files (models, services, controllers, etc.) → unit tests only
 #
-# Variables configurables :
-#   TEST_CMD          — commande de tests unitaires/intégration (défaut : bin/rails test)
-#   SYSTEM_TEST_CMD   — commande de tests système (défaut : bin/rails test:system)
+# Configurable variables:
+#   TEST_CMD          — unit/integration test command (default: bin/rails test)
+#   SYSTEM_TEST_CMD   — system test command (default: bin/rails test:system)
 
 set -e
 
@@ -17,33 +17,33 @@ SYSTEM_TEST_CMD="${SYSTEM_TEST_CMD:-bin/rails test:system}"
 INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 
-# Pas de file_path → rien à faire
+# No file_path → nothing to do
 [ -z "$FILE_PATH" ] && exit 0
 
-# Ignorer les fichiers non-code
+# Ignore non-code files
 case "$FILE_PATH" in
   *.md|*.json|*.yaml|*.yml|*.txt|*.lock|*.toml) exit 0 ;;
   */.claude/*|*/CLAUDE.md) exit 0 ;;
 esac
 
-# Déterminer si c'est un changement frontend
+# Determine if it's a frontend change
 is_frontend=false
 case "$FILE_PATH" in
   */app/views/*|*/app/javascript/*|*/app/assets/*|*/app/helpers/*)
     is_frontend=true ;;
 esac
 
-echo "🧪 Tests auto ($(basename "$FILE_PATH"))..."
+echo "🧪 Auto-tests ($(basename "$FILE_PATH"))..."
 
-# Toujours lancer les tests unitaires/intégration
+# Always run unit/integration tests
 if ! $TEST_CMD 2>&1 | tail -8; then
-  echo "❌ Tests unitaires en échec"
+  echo "❌ Unit tests failed"
   exit 0
 fi
 
-# Tests système uniquement pour les changements frontend
+# System tests only for frontend changes
 if [ "$is_frontend" = true ]; then
-  echo "🖥️  Tests système (changement frontend)..."
+  echo "🖥️  System tests (frontend change)..."
   $SYSTEM_TEST_CMD 2>&1 | tail -8
 fi
 

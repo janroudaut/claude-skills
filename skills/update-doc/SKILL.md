@@ -1,139 +1,139 @@
 ---
-description: Détecte le drift entre le code et la documentation, propose et applique les mises à jour nécessaires
-argument-hint: chemin ou nom du fichier doc à mettre à jour (optionnel — sans argument, scanne le projet)
+description: Detect drift between code and documentation, propose and apply necessary updates
+argument-hint: doc file path or name to update (optional — without argument, scans the project)
 ---
 
-# /update-doc — Mise à jour de la documentation
+# /update-doc — Documentation Update
 
-Analyse les écarts entre le code actuel et la documentation, puis propose et applique les mises à jour nécessaires.
+Analyzes gaps between the current code and documentation, then proposes and applies necessary updates.
 
 **Scope**: $ARGUMENTS
 
-**Pré-requis** : consulter le CLAUDE.md du projet pour la structure du code et les conventions.
+**Prerequisite**: check the project's CLAUDE.md for code structure and conventions.
 
-## Principes
+## Principles
 
-- **Non-intrusif** : ne jamais modifier sans validation de l'utilisateur
-- **Fidèle au style** : respecter la structure et le ton des docs existantes
-- **Discovery-based** : pas de scopes hardcodés — scanner le projet pour trouver la doc
-- **Orienté lecteur** : adapter le niveau de détail au public cible du document
+- **Non-intrusive**: never modify without user validation
+- **Style-faithful**: respect the structure and tone of existing docs
+- **Discovery-based**: no hardcoded scopes — scan the project to find docs
+- **Reader-oriented**: adapt the level of detail to the document's target audience
 
 ---
 
-## Phase 1 : Découverte et sélection du scope
+## Phase 1: Discovery and Scope Selection
 
-### Si `$ARGUMENTS` est fourni :
-- Si c'est un chemin de fichier → cibler ce fichier directement
-- Si c'est un mot-clé → chercher les fichiers doc correspondants (`README`, `api`, `setup`, etc.)
+### If `$ARGUMENTS` is provided:
+- If it's a file path → target that file directly
+- If it's a keyword → search for matching doc files (`README`, `api`, `setup`, etc.)
 
-### Si `$ARGUMENTS` est vide :
+### If `$ARGUMENTS` is empty:
 
-1. Scanner le projet pour trouver les fichiers de documentation :
+1. Scan the project to find documentation files:
    ```bash
    find . -name "*.md" -not -path "./.claude/*" -not -path "./vendor/*" -not -path "./node_modules/*" | head -30
    ```
 
-2. Présenter les fichiers trouvés via `AskUserQuestion` avec `multiSelect: true` :
-   - Regrouper par dossier si beaucoup de fichiers
-   - Option "Tout scanner" pour une analyse complète
+2. Present the found files via `AskUserQuestion` with `multiSelect: true`:
+   - Group by folder if many files
+   - "Scan all" option for a complete analysis
 
-**Attendre la sélection avant de continuer.**
-
----
-
-## Phase 2 : Analyse des écarts
-
-Pour chaque fichier doc sélectionné :
-
-### 2A. Lire le contenu existant
-
-Lire le fichier Markdown en entier.
-
-### 2B. Identifier le code lié
-
-Inférer les fichiers source documentés en cherchant :
-- Les chemins de fichiers mentionnés dans la doc
-- Les classes, méthodes, commandes référencées
-- Les noms de fichiers/dossiers cités
-
-Explorer le code correspondant pour comprendre l'état actuel.
-
-### 2C. Détecter les écarts
-
-Pour chaque section de la doc, repérer :
-- **Informations obsolètes** : commandes, chemins, options, noms qui ont changé dans le code
-- **Fonctionnalités non documentées** : présentes dans le code mais absentes de la doc
-- **Fonctionnalités supprimées** : documentées mais supprimées du code
-- **Incohérences** : versions, dépendances, exemples qui ne correspondent plus
+**Wait for selection before continuing.**
 
 ---
 
-## Phase 3 : Proposition des changements
+## Phase 2: Gap Analysis
 
-### 3A. Résumé des écarts
+For each selected doc file:
 
-Présenter un résumé textuel clair de tous les écarts trouvés, organisé par fichier.
+### 2A. Read Existing Content
 
-### 3B. Choix des modifications
+Read the full Markdown file.
 
-Utiliser `AskUserQuestion` avec `multiSelect: true` pour lister les modifications proposées.
+### 2B. Identify Related Code
 
-Format de chaque option :
+Infer the documented source files by searching for:
+- File paths mentioned in the doc
+- Referenced classes, methods, commands
+- Cited file/folder names
+
+Explore the corresponding code to understand the current state.
+
+### 2C. Detect Gaps
+
+For each section of the doc, identify:
+- **Outdated information**: commands, paths, options, names that have changed in the code
+- **Undocumented features**: present in the code but missing from the doc
+- **Removed features**: documented but deleted from the code
+- **Inconsistencies**: versions, dependencies, examples that no longer match
+
+---
+
+## Phase 3: Propose Changes
+
+### 3A. Gap Summary
+
+Present a clear text summary of all gaps found, organized by file.
+
+### 3B. Select Changes
+
+Use `AskUserQuestion` with `multiSelect: true` to list proposed changes.
+
+Format each option:
 ```
-label: "fichier.md — Description courte du changement"
-description: "Détail : ce qui est obsolète / manquant et ce qui sera modifié"
+label: "file.md — Short change description"
+description: "Detail: what is outdated / missing and what will be modified"
 ```
 
-Inclure les options :
-- **"Tout appliquer"** : applique toutes les modifications proposées
-- **"Annuler"** : ne rien modifier
+Include options:
+- **"Apply all"**: apply all proposed changes
+- **"Cancel"**: modify nothing
 
-Si plus de 4 modifications, présenter les 4 plus importantes via `AskUserQuestion` et lister les autres en texte. L'utilisateur peut répondre "Other" pour sélectionner parmi les restantes.
+If more than 4 changes, present the top 4 most important via `AskUserQuestion` and list the rest as text. The user can reply "Other" to select from the remaining ones.
 
-**Attendre la sélection de l'utilisateur avant de continuer.**
+**Wait for the user's selection before continuing.**
 
-Si l'utilisateur choisit "Annuler", s'arrêter avec un message de confirmation.
-
----
-
-## Phase 4 : Application des modifications
-
-Pour chaque modification sélectionnée :
-1. Lire le fichier cible
-2. Appliquer la modification (Edit ou Write selon l'ampleur)
-3. Respecter le style existant : titres, listes, formatage, niveau de détail, langue
+If the user chooses "Cancel", stop with a confirmation message.
 
 ---
 
-## Phase 5 : Vérification
+## Phase 4: Apply Changes
 
-### 5A. Relecture
+For each selected change:
+1. Read the target file
+2. Apply the change (Edit or Write depending on scope)
+3. Respect existing style: headings, lists, formatting, level of detail, language
 
-Relire chaque fichier modifié pour vérifier :
-- Cohérence du contenu
-- Pas de coquilles ou accents manquants (si doc en français)
-- Formatage Markdown correct
+---
 
-### 5B. Vérification des liens
+## Phase 5: Verification
 
-Vérifier que :
-- Les liens vers des fichiers ou images pointent vers des ressources existantes
-- Les ancres internes (`[...](#section)`) sont valides
-- Les références croisées entre fichiers de doc sont correctes
+### 5A. Proofreading
 
-### 5C. Résumé final
+Re-read each modified file to verify:
+- Content consistency
+- No typos or formatting issues
+- Correct Markdown formatting
 
-Présenter à l'utilisateur :
-- La liste des fichiers modifiés
-- Un résumé de chaque modification appliquée
-- Les éventuels problèmes non résolus
+### 5B. Link Verification
 
-Ne PAS commiter automatiquement — attendre que l'utilisateur le demande.
+Verify that:
+- Links to files or images point to existing resources
+- Internal anchors (`[...](#section)`) are valid
+- Cross-references between doc files are correct
+
+### 5C. Final Summary
+
+Present to the user:
+- The list of modified files
+- A summary of each applied change
+- Any unresolved issues
+
+Do NOT commit automatically — wait for the user to ask.
 
 ---
 
 ## Notes
 
-- Si aucun écart n'est trouvé, le dire simplement — ne pas inventer de modifications
-- Ne jamais écrire de détails d'implémentation dans des docs destinées aux utilisateurs finaux
-- Respecter la langue du document existant (ne pas traduire un doc EN en FR ou inversement)
+- If no gaps are found, simply say so — don't invent changes
+- Never write implementation details in docs intended for end users
+- Respect the language of the existing document (don't translate an EN doc to another language or vice versa)

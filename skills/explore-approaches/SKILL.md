@@ -1,101 +1,101 @@
 ---
-description: Explore plusieurs approches d'implémentation en parallèle via des agents concurrents, puis compare
-argument-hint: description de la fonctionnalité ou du problème à résoudre
+description: Explore multiple implementation approaches in parallel via concurrent agents, then compare
+argument-hint: description of the feature or problem to solve
 ---
 
-# /explore-approaches — Exploration Parallèle
+# /explore-approaches — Parallel Exploration
 
-Explore 2 approches d'implémentation concurrentes via des sub-agents, compare les résultats, et recommande la meilleure.
+Explores 2 concurrent implementation approaches via sub-agents, compares the results, and recommends the best one.
 
-**Objectif**: $ARGUMENTS
+**Goal**: $ARGUMENTS
 
-## Principes
+## Principles
 
-- **Concret** : chaque agent produit du CODE fonctionnel, pas un plan
-- **Timeboxé** : max 15 tours par agent — pas de spirale d'exploration
-- **Comparable** : mêmes critères d'évaluation pour chaque approche
-- **Décision finale par l'utilisateur** : recommander, ne pas imposer
-
----
-
-## Phase 1 : Cadrage (2 minutes max)
-
-1. Lire les fichiers pertinents pour comprendre l'architecture existante
-2. Identifier exactement 2 approches distinctes et viables
-3. Présenter les 2 approches en 2-3 phrases chacune à l'utilisateur :
-
-```
-Approche A : [nom court] — [description]
-Approche B : [nom court] — [description]
-```
-
-Utiliser `AskUserQuestion` pour confirmer ou ajuster les approches avant de lancer les agents.
+- **Concrete**: each agent produces working CODE, not a plan
+- **Timeboxed**: max 15 turns per agent — no exploration spiral
+- **Comparable**: same evaluation criteria for each approach
+- **User decides**: recommend, don't impose
 
 ---
 
-## Phase 2 : Agents parallèles
+## Phase 1: Scoping (2 minutes max)
 
-Lancer 2 agents Task en parallèle avec `isolation: "worktree"` :
+1. Read relevant files to understand the existing architecture
+2. Identify exactly 2 distinct and viable approaches
+3. Present the 2 approaches in 2-3 sentences each to the user:
 
-Chaque agent reçoit un prompt structuré :
 ```
-Contexte : [description du projet et des fichiers pertinents]
-Objectif : [la fonctionnalité demandée]
-Approche : [A ou B — description détaillée]
-Contraintes :
-- Implémenter l'approche en modifiant les fichiers nécessaires
-- Écrire au moins un test qui vérifie le comportement
-- Lancer les tests modifiés pour vérifier qu'ils passent
-- Résumer : fichiers modifiés, lignes de code ajoutées, complexité perçue
+Approach A: [short name] — [description]
+Approach B: [short name] — [description]
 ```
 
-**Important** : utiliser `max_turns: 15` pour timeboxer chaque agent.
+Use `AskUserQuestion` to confirm or adjust the approaches before launching agents.
 
 ---
 
-## Phase 3 : Comparaison
+## Phase 2: Parallel Agents
 
-Quand les 2 agents terminent, comparer sur ces critères :
+Launch 2 Task agents in parallel with `isolation: "worktree"`:
 
-| Critère | Approche A | Approche B |
-|---------|-----------|-----------|
-| Fichiers modifiés | N | N |
-| Lignes ajoutées | N | N |
-| Tests écrits | N | N |
-| Tests passent ? | oui/non | oui/non |
-| Cohérence avec l'existant | score /5 | score /5 |
-| Complexité | faible/moyenne/élevée | faible/moyenne/élevée |
+Each agent receives a structured prompt:
+```
+Context: [project description and relevant files]
+Goal: [the requested feature]
+Approach: [A or B — detailed description]
+Constraints:
+- Implement the approach by modifying the necessary files
+- Write at least one test that verifies the behavior
+- Run the modified tests to verify they pass
+- Summarize: modified files, lines of code added, perceived complexity
+```
+
+**Important**: use `max_turns: 15` to timebox each agent.
 
 ---
 
-## Phase 4 : Recommandation
+## Phase 3: Comparison
 
-Présenter le tableau de comparaison et recommander l'approche qui :
-1. A le moins de fichiers modifiés
-2. Est la plus cohérente avec les patterns existants du projet
-3. A les tests qui passent
+When both agents complete, compare on these criteria:
 
-Utiliser `AskUserQuestion` :
+| Criterion | Approach A | Approach B |
+|-----------|-----------|-----------|
+| Files modified | N | N |
+| Lines added | N | N |
+| Tests written | N | N |
+| Tests pass? | yes/no | yes/no |
+| Consistency with existing code | score /5 | score /5 |
+| Complexity | low/medium/high | low/medium/high |
+
+---
+
+## Phase 4: Recommendation
+
+Present the comparison table and recommend the approach that:
+1. Has the fewest modified files
+2. Is the most consistent with existing project patterns
+3. Has passing tests
+
+Use `AskUserQuestion`:
 ```
-label: "Approche A — [nom]"
-description: "[résumé des avantages/inconvénients]"
+label: "Approach A — [name]"
+description: "[summary of pros/cons]"
 ```
 
 ---
 
-## Phase 5 : Application
+## Phase 5: Application
 
-Après le choix de l'utilisateur :
-1. Appliquer les changements du worktree choisi dans la branche courante
-2. Relancer les tests pour confirmer
-3. Résumer les fichiers modifiés
+After the user's choice:
+1. Apply the changes from the chosen worktree into the current branch
+2. Re-run tests to confirm
+3. Summarize the modified files
 
-Ne PAS commiter automatiquement — attendre que l'utilisateur le demande.
+Do NOT commit automatically — wait for the user to ask.
 
 ---
 
 ## Notes
 
-- Si les 2 approches échouent (tests cassés), le dire franchement et proposer une 3e piste
-- Ne pas favoriser une approche pour des raisons esthétiques — prioriser ce qui fonctionne
-- Les worktrees sont automatiquement nettoyés si non utilisés
+- If both approaches fail (broken tests), say so honestly and suggest a 3rd path
+- Don't favor an approach for aesthetic reasons — prioritize what works
+- Worktrees are automatically cleaned up if unused

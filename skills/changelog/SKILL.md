@@ -1,127 +1,126 @@
 ---
-description: Génère ou met à jour le changelog métier (CHANGES_fr.md) à partir des commits récents
-argument-hint: "full" pour tout régénérer (optionnel — par défaut, ajoute un nouveau jalon)
+description: Generate or update the business changelog (CHANGELOG.md) from recent commits
+argument-hint: '"full" to regenerate everything (optional, defaults to adding a new milestone)'
 ---
 
-# /changelog — Mise à jour du changelog métier
+# /changelog — Business Changelog Update
 
-Génère les entrées du changelog orienté métier (`CHANGES_fr.md`) à partir de l'historique Git.
+Generates business-oriented changelog entries (`CHANGELOG.md`) from Git history.
 
 **Arguments**: $ARGUMENTS
 
 ---
 
-## Mode : Déterminer le mode d'exécution
+## Mode: Determine Execution Mode
 
-- Si `$ARGUMENTS` contient `full` → **Mode complet** : régénérer tout le fichier
-- Sinon → **Mode incrémental** : ajouter un nouveau jalon
+- If `$ARGUMENTS` contains `full` → **Full mode**: regenerate the entire file
+- Otherwise → **Incremental mode**: add a new milestone
 
 ---
 
-## Mode incrémental (par défaut)
+## Incremental Mode (default)
 
-### Étape 1 : Lire l'état actuel
+### Step 1: Read Current State
 
-1. Lire `CHANGES_fr.md` pour identifier le dernier jalon (ex: `v3`)
-2. Identifier la date du dernier jalon en parcourant les commits correspondants
+1. Read `CHANGELOG.md` to identify the last milestone (e.g., `v3`)
+2. Identify the date of the last milestone by browsing the corresponding commits
 
-### Étape 2 : Récupérer les commits récents
+### Step 2: Fetch Recent Commits
 
 ```bash
 git log --oneline --no-merges main
 ```
 
-Parcourir les commits depuis le dernier jalon connu. Si aucun commit significatif n'est trouvé, informer l'utilisateur et s'arrêter.
+Browse commits since the last known milestone. If no significant commits are found, inform the user and stop.
 
-### Étape 3 : Analyser et regrouper
+### Step 3: Analyze and Group
 
-Pour chaque commit pertinent, lire le diff pour comprendre le changement :
+For each relevant commit, read the diff to understand the change:
 
 ```bash
 git show --stat <sha>
-git show <sha> -- <fichiers_clés>
+git show <sha> -- <key_files>
 ```
 
-Ignorer :
-- Les commits de merge
-- Les mises à jour de dépendances (dependabot)
-- Les changements purement techniques (CI, config, refactoring interne) sauf s'ils sont significatifs
-- Les modifications de tests uniquement
+Ignore:
+- Merge commits
+- Dependency updates (dependabot)
+- Purely technical changes (CI, config, internal refactoring) unless significant
+- Test-only modifications
 
-Regrouper les changements en catégories métier (Nouveautés, Qualité, Infrastructure).
+Group changes into business categories (New Features, Quality, Infrastructure).
 
-### Étape 4 : Proposer le nouveau jalon
+### Step 4: Propose the New Milestone
 
-Déterminer le numéro de version (dernier + 1) et proposer un titre de jalon.
+Determine the version number (last + 1) and propose a milestone title.
 
-Générer le bloc au format :
+Generate the block in this format:
 
 ```markdown
-## vX — Titre du jalon (période)
+## vX — Milestone Title (period)
 
-Description courte du jalon (1-2 phrases).
+Short milestone description (1-2 sentences).
 
-**Nouveautés :**
-- Item orienté utilisateur, pas technique
-- Chaque item décrit le bénéfice, pas l'implémentation
+**New Features:**
+- User-oriented item, not technical
+- Each item describes the benefit, not the implementation
 ```
 
-### Étape 5 : Validation utilisateur
+### Step 5: User Validation
 
-Présenter le bloc généré à l'utilisateur avec `AskUserQuestion` :
-- Option 1 : "Valider et écrire" — insérer en haut du fichier (après le titre `# Historique des évolutions`)
-- Option 2 : "Modifier le titre du jalon" — l'utilisateur propose un autre titre
-- Option 3 : "Annuler"
+Present the generated block to the user with `AskUserQuestion`:
+- Option 1: "Validate and write" — insert at the top of the file (after the `# Changelog` heading)
+- Option 2: "Change the milestone title" — the user proposes a different title
+- Option 3: "Cancel"
 
-### Étape 6 : Écrire
+### Step 6: Write
 
-Si validé, insérer le nouveau jalon en haut de `CHANGES_fr.md`, juste après la ligne `# Historique des évolutions`, suivi d'une ligne vide et du séparateur `---`.
+If validated, insert the new milestone at the top of `CHANGELOG.md`, right after the `# Changelog` line, followed by a blank line and the `---` separator.
 
 ---
 
-## Mode complet (`full`)
+## Full Mode (`full`)
 
-### Étape 1 : Récupérer tout l'historique
+### Step 1: Fetch Full History
 
 ```bash
 git log --oneline --no-merges --reverse main
 ```
 
-### Étape 2 : Identifier les jalons
+### Step 2: Identify Milestones
 
-Regrouper les commits en jalons métier cohérents. Critères de découpage :
-- Changement majeur de domaine fonctionnel
-- Pause significative entre les périodes de développement
-- Cohérence thématique des commits
+Group commits into coherent business milestones. Splitting criteria:
+- Major change in functional domain
+- Significant pause between development periods
+- Thematic consistency of commits
 
-### Étape 3 : Générer le fichier complet
+### Step 3: Generate the Complete File
 
-Pour chaque jalon, générer un bloc au format standard. Numéroter séquentiellement (v1, v2, v3...).
+For each milestone, generate a block in the standard format. Number sequentially (v1, v2, v3...).
 
-### Étape 4 : Validation utilisateur
+### Step 4: User Validation
 
-Présenter le fichier complet avec `AskUserQuestion` :
-- Option 1 : "Valider et écrire"
-- Option 2 : "Annuler"
+Present the complete file with `AskUserQuestion`:
+- Option 1: "Validate and write"
+- Option 2: "Cancel"
 
-### Étape 5 : Écrire
+### Step 5: Write
 
-Si validé, réécrire `CHANGES_fr.md` entièrement.
+If validated, rewrite `CHANGELOG.md` entirely.
 
 ---
 
-## Règles de rédaction
+## Writing Rules
 
-- **Orienté métier** : décrire ce que l'utilisateur peut faire, pas comment c'est implémenté
-- **Français** : tout en français, termes techniques courants acceptés (OCR, PDF, UUID)
-- **Concis** : chaque item en une phrase, pas de jargon technique inutile
-- **Pas de noms de fichiers/classes** : dire "analyse automatique des documents" pas "OcrLlmService"
-- **Pas de numéros de PR/commit** dans le changelog final
+- **Business-oriented**: describe what the user can do, not how it's implemented
+- **Concise**: each item in one sentence, no unnecessary technical jargon
+- **No file/class names**: say "automatic document analysis" not "OcrLlmService"
+- **No PR/commit numbers** in the final changelog
 
 ---
 
 ## Notes
 
-- Ne jamais écrire sans validation de l'utilisateur
-- Si le nombre de commits est très important (> 100), demander à l'utilisateur de préciser une plage de dates ou un nombre de commits
-- Le fichier utilise le titre `# Historique des évolutions` (pas "Journal des changements")
+- Never write without user validation
+- If the number of commits is very large (> 100), ask the user to specify a date range or commit count
+- The file uses the heading `# Changelog`

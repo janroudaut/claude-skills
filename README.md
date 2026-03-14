@@ -1,68 +1,68 @@
-# Claude Skills — Skills Réutilisables pour Claude Code
+# Claude Skills — Reusable Skills for Claude Code
 
-Collection de skills Claude Code génériques, extraites de projets en production et prêtes à l'emploi sur n'importe quel projet.
+Collection of generic Claude Code skills, extracted from production projects and ready to use on any project.
 
-## Philosophie
+## Philosophy
 
-Ces skills encodent des workflows de développement éprouvés : feature pipeline, bugfix test-first, revue de code, exploration d'approches, changelog métier. Elles sont conçues pour être **autonomes** (pas de référence à un projet spécifique) et **composables** (chaque skill fonctionne indépendamment).
+These skills encode proven development workflows: feature pipeline, test-first bugfix, code review, approach exploration, business changelog. They are designed to be **standalone** (no reference to a specific project) and **composable** (each skill works independently).
 
-Le repository inclut aussi un **template CLAUDE.md** avec des guidelines comportementales partagées, et un **hook de test automatique** qui lance les tests après chaque édition de fichier.
+The repository also includes a **CLAUDE.md template** with shared behavioral guidelines, and an **automatic test hook** that runs tests after each file edit.
 
-## Catalogue des skills
+## Skill Catalog
 
 | Skill | Description | Argument |
 |-------|------------|----------|
-| `/feature` | Pipeline autonome : branche → implémentation → tests → commits → PR | description de la fonctionnalité |
-| `/bugfix` | Diagnostic et correction test-first avec agents parallèles | description du symptôme |
-| `/explore-approaches` | Compare 2 approches via agents en worktrees isolés | objectif à atteindre |
-| `/polish` | Revue de code : bugs, conformité, couverture tests + corrections QCM | numéro de PR ou branche (optionnel) |
-| `/changelog` | Génère le changelog métier à partir des commits | `full` pour tout régénérer (optionnel) |
-| `/update-doc` | Détecte le drift code↔doc et propose les mises à jour | chemin ou nom du fichier doc (optionnel) |
-| `/update-scenarios` | Intègre les nouvelles features dans les scénarios e2e par domaine | fonctionnalité ajoutée/modifiée |
+| [`/feature`](skills/feature/SKILL.md) | Autonomous pipeline: branch, implement, test, commit, PR | feature description |
+| [`/bugfix`](skills/bugfix/SKILL.md) | Test-first diagnosis and fix with parallel agents | symptom description |
+| [`/explore-approaches`](skills/explore-approaches/SKILL.md) | Compare 2 approaches via agents in isolated worktrees | goal to achieve |
+| [`/polish`](skills/polish/SKILL.md) | Code review: bugs, compliance, test coverage + QCM fixes | PR number or branch (optional) |
+| [`/changelog`](skills/changelog/SKILL.md) | Generate business changelog from commits | `full` to regenerate everything (optional) |
+| [`/update-doc`](skills/update-doc/SKILL.md) | Detect code-doc drift and propose updates | doc file path or name (optional) |
+| [`/update-scenarios`](skills/update-scenarios/SKILL.md) | Integrate new features into e2e scenarios by domain | added/modified feature |
 
-Voir [SKILLS.md](SKILLS.md) pour la documentation complète avec exemples.
+See [SKILLS.md](SKILLS.md) for the full documentation with examples.
 
 ## Installation
 
-### Installation rapide
+### Quick Install
 
 ```bash
-# Tout installer dans votre projet
-bin/install --all /chemin/vers/votre-projet
+# Install everything into your project
+bin/install --all /path/to/your-project
 
-# Skills uniquement
-bin/install --skills /chemin/vers/votre-projet
+# Skills only
+bin/install --skills /path/to/your-project
 
-# Hook de test + settings.json
-bin/install --hook /chemin/vers/votre-projet
+# Test hook + settings.json
+bin/install --hook /path/to/your-project
 
-# Template CLAUDE.md
-bin/install --template /chemin/vers/votre-projet
+# CLAUDE.md template
+bin/install --template /path/to/your-project
 ```
 
-### Installation interactive
+### Interactive Install
 
 ```bash
-bin/install /chemin/vers/votre-projet
+bin/install /path/to/your-project
 ```
 
-Le script vous guide dans le choix des composants à installer.
+The script guides you through choosing which components to install.
 
-### Installation manuelle
+### Manual Install
 
-Copier les skills souhaitées dans `.claude/skills/` de votre projet :
+Copy the desired skills into your project's `.claude/skills/`:
 
 ```bash
-cp -r skills/feature/.  /votre-projet/.claude/skills/feature/
-cp -r skills/bugfix/.   /votre-projet/.claude/skills/bugfix/
+cp -r skills/feature/.  /your-project/.claude/skills/feature/
+cp -r skills/bugfix/.   /your-project/.claude/skills/bugfix/
 # etc.
 ```
 
-## Contenu du repository
+## Repository Contents
 
 ```
 claude-skills/
-├── skills/                    # Skills prêtes à l'emploi
+├── skills/                    # Ready-to-use skills
 │   ├── bugfix/SKILL.md
 │   ├── changelog/SKILL.md
 │   ├── explore-approaches/SKILL.md
@@ -70,35 +70,35 @@ claude-skills/
 │   ├── polish/SKILL.md
 │   ├── update-doc/SKILL.md
 │   └── update-scenarios/SKILL.md
-├── templates/                 # Templates de configuration
-│   ├── bin/demo               # Script démo enregistrable (ffmpeg, title cards, chapitres MKV)
-│   ├── CLAUDE.md              # Guidelines comportementales
-│   └── settings.json          # Hook PostToolUse
-├── bin/                       # Scripts utilitaires
-│   ├── install                # Installeur interactif
-│   └── test-hook              # Hook auto-test générique
+├── templates/                 # Configuration templates
+│   ├── bin/demo               # Recordable demo script (copied to your project's bin/demo)
+│   ├── CLAUDE.md              # Behavioral guidelines
+│   └── settings.json          # PostToolUse hook
+├── bin/                       # Utility scripts
+│   ├── install                # Interactive installer
+│   └── test-hook              # Generic auto-test hook
 ├── README.md
-└── SKILLS.md                  # Documentation utilisateur des skills
+└── SKILLS.md                  # User-facing skill documentation
 ```
 
-## Créer une skill projet-spécifique
+## Creating a Project-Specific Skill
 
-Les skills de ce repository sont génériques. Pour des besoins spécifiques à votre projet :
+The skills in this repository are generic. For project-specific needs:
 
-1. Créer le dossier `.claude/skills/ma-skill/` dans votre projet
-2. Écrire un `SKILL.md` avec le frontmatter requis :
+1. Create the folder `.claude/skills/my-skill/` in your project
+2. Write a `SKILL.md` with the required frontmatter:
    ```yaml
    ---
-   description: Description courte de la skill
-   argument-hint: indice sur l'argument attendu
+   description: Short skill description
+   argument-hint: hint about the expected argument
    ---
    ```
-3. Structurer la skill en phases claires avec des points de contrôle
+3. Structure the skill in clear phases with checkpoints
 
-## Pré-requis
+## Prerequisites
 
-- **Claude Code** : les skills sont conçues pour Claude Code (cli)
-- **Test runner** : les skills et templates utilisent `bin/rails test` par défaut (configurable via `TEST_CMD`)
-- **jq** : requis par `bin/test-hook` pour parser le JSON d'entrée
-- **gh** (optionnel) : requis par `/feature` et `/polish` pour créer des PRs
-- **ffmpeg + ffprobe** (optionnel) : requis par `bin/demo --record` pour l'enregistrement vidéo
+- **Claude Code**: these skills are designed for Claude Code (CLI)
+- **Test runner**: skills and templates default to `bin/rails test` (configurable via `TEST_CMD`)
+- **jq**: required by `bin/test-hook` to parse JSON input
+- **gh** (optional): required by `/feature` and `/polish` for creating PRs
+- **ffmpeg + ffprobe** (optional): required by [`templates/bin/demo`](templates/bin/demo) `--record` for video recording
